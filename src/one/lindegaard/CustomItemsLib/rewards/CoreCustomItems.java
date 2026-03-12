@@ -40,6 +40,12 @@ import one.lindegaard.Core.v1_19_R2.Skins_1_19_R2;
 import one.lindegaard.Core.v1_19_R3.Skins_1_19_R3;
 import one.lindegaard.Core.v1_20_R1.Skins_1_20_R1;
 import one.lindegaard.Core.v1_20_R2.Skins_1_20_R2;
+import one.lindegaard.Core.v1_20_R3.Skins_1_20_R3;
+import one.lindegaard.Core.v1_21_R1.Skins_1_21_R1;
+import one.lindegaard.Core.v1_21_R2.Skins_1_21_R2;
+import one.lindegaard.Core.v1_21_R3.Skins_1_21_R3;
+import one.lindegaard.Core.v1_21_R4.Skins_1_21_R4;
+import one.lindegaard.Core.v1_21_R5.Skins_1_21_R5;
 import one.lindegaard.Core.v1_8_R1.Skins_1_8_R1;
 import one.lindegaard.Core.v1_8_R2.Skins_1_8_R2;
 import one.lindegaard.Core.v1_8_R3.Skins_1_8_R3;
@@ -74,12 +80,25 @@ public class CoreCustomItems {
 		Skins sk = null;
 		try {
 			version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-		} catch (ArrayIndexOutOfBoundsException whatVersionAreYouUsingException) {
-			whatVersionAreYouUsingException.printStackTrace();
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// MC 1.21.5+ dropped versioned package names — fall back to Mojang API for skin retrieval
+			Bukkit.getLogger().warning("[CustomItemsLib] Unversioned CraftBukkit package detected (MC 1.21.5+) — skin lookup will use Mojang API instead of NMS.");
 			return null;
 		}
 		// https://www.spigotmc.org/wiki/spigot-nms-and-minecraft-versions-1-16/
-		if (version.equals("v1_20_R2")) {
+		if (version.equals("v1_21_R5")) {
+			sk = new Skins_1_21_R5();
+		} else if (version.equals("v1_21_R4")) {
+			sk = new Skins_1_21_R4();
+		} else if (version.equals("v1_21_R3")) {
+			sk = new Skins_1_21_R3();
+		} else if (version.equals("v1_21_R2")) {
+			sk = new Skins_1_21_R2();
+		} else if (version.equals("v1_21_R1")) {
+			sk = new Skins_1_21_R1();
+		} else if (version.equals("v1_20_R3")) {
+			sk = new Skins_1_20_R3();
+		} else if (version.equals("v1_20_R2")) {
 			sk = new Skins_1_20_R2();
 		} else if (version.equals("v1_20_R1")) {
 			sk = new Skins_1_20_R1();

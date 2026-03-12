@@ -80,4 +80,20 @@ public class TitleManagerCompat {
 		}
 	}
 **/
+
+	public static boolean isSupported() {
+		return false;
+	}
+
+	public static boolean isEnabledInConfig() {
+		return false;
+	}
+
+	public static void setActionBar(Player player, String message) {
+		// TitleManager integration disabled
+	}
+
+	public static void sendTitles(Player player, String title, String subtitle, int fadein, int stay, int fadeout) {
+		// TitleManager integration disabled
+	}
 }

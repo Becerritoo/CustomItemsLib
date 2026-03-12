@@ -108,6 +108,18 @@
 		
 		<dependency>
 			<groupId>one.lindegaard</groupId>
+			<artifactId>NMS_v1_21_R5</artifactId>
+			<version>${main.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>one.lindegaard</groupId>
+			<artifactId>NMS_v1_21_R4</artifactId>
+			<version>${main.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>one.lindegaard</groupId>
 			<artifactId>NMS_v1_21_R3</artifactId>
 			<version>${main.version}</version>
 			<scope>provided</scope>
@@ -248,13 +260,25 @@
 			<artifactId>BagOfGold</artifactId>
 			<version>${bagofgold.version}</version>
 			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>one.lindegaard</groupId>
 			<artifactId>MobHunting</artifactId>
 			<version>${mobhunting.version}</version>
 			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		
 		<!-- BossBarAPI -->
@@ -325,7 +349,7 @@
 			<scope>provided</scope>
 		</dependency>
 		
-				<!-- Vault / -->
+				<!-- Vault -->
 		<dependency>
 			<groupId>net.milkbowl.vault</groupId>
 			<artifactId>Vault</artifactId>
@@ -333,6 +357,27 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- Reserve -->
+		<dependency>
+			<groupId>net.tnemc</groupId>
+			<artifactId>Reserve</artifactId>
+			<version>${reserve.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Citizens -->
+		<dependency>
+			<groupId>net.citizensnpcs</groupId>
+			<artifactId>citizens-main</artifactId>
+			<version>${citizensapi.version}</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 	</dependencies>
 
