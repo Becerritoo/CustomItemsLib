@@ -7,7 +7,7 @@ author: Rocologo
 depend: []
 loadbefore: [BagOfGold, MobHunting]
 softdepend: [Reserve, Vault, PerWorldInventory, Citizens, Essentials, ProtocolLib, PacketListenerApi, ItemFrameShops, Multiverse-Core, TitleManager, CMI, CMILib, BossBarAPI, BarAPI, ActionBar, TitleAPI, TitleManager, ActionBarAPI, ActionAnnouncer]
-api-version: 1.13
+api-version: 1.21
 
 commands:
   customitemslib:
