@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -15,6 +17,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -159,35 +163,72 @@ public class CoreCustomItems {
 	 */
 	public static ItemStack getCustomtexture(Reward reward, String mTextureValue, String mTextureSignature) {
 		ItemStack skull = CoreCustomItems.getDefaultPlayerHead(1);
-		if (mTextureSignature.isEmpty() || mTextureValue.isEmpty())
+		if (mTextureValue.isEmpty())
 			return skull;
 
 		// add custom texture to skull
 		SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-		GameProfile profile = new GameProfile(reward.getSkinUUID(), reward.getDisplayName());
-		if (mTextureSignature.isEmpty())
-			profile.getProperties().put("textures", new Property("textures", mTextureValue));
-		else
-			profile.getProperties().put("textures", new Property("textures", mTextureValue, mTextureSignature));
-		Field profileField = null;
+		try {
+			// Modern API path (Paper/Spigot 1.20+): build a PlayerProfile from the encoded texture value.
+			URL skinUrl = getSkinUrlFromTextureValue(mTextureValue);
+			if (skinUrl != null) {
+				UUID profileUuid = reward.getSkinUUID() != null ? reward.getSkinUUID() : UUID.randomUUID();
+				PlayerProfile ownerProfile = Bukkit.createPlayerProfile(profileUuid);
+				PlayerTextures textures = ownerProfile.getTextures();
+				textures.setSkin(skinUrl);
+				ownerProfile.setTextures(textures);
+				skullMeta.setOwnerProfile(ownerProfile);
+			} else {
+				throw new IllegalArgumentException("Could not decode skin URL from texture value.");
+			}
+		} catch (Throwable modernApiFailure) {
+			// Legacy fallback for old servers relying on direct GameProfile field injection.
+			GameProfile profile = new GameProfile(reward.getSkinUUID(), reward.getDisplayName());
+			if (mTextureSignature.isEmpty())
+				profile.getProperties().put("textures", new Property("textures", mTextureValue));
+			else
+				profile.getProperties().put("textures", new Property("textures", mTextureValue, mTextureSignature));
+			Field profileField = null;
 
-		try {
-			profileField = skullMeta.getClass().getDeclaredField("profile");
-		} catch (NoSuchFieldException | SecurityException e) {
-			e.printStackTrace();
-			return skull;
-		}
-		profileField.setAccessible(true);
-		try {
-			profileField.set(skullMeta, profile);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+			try {
+				profileField = skullMeta.getClass().getDeclaredField("profile");
+			} catch (NoSuchFieldException | SecurityException e) {
+				Core.getMessages().debug("Unable to set skull profile by reflection: %s", e.getMessage());
+				return skull;
+			}
+			profileField.setAccessible(true);
+			try {
+				profileField.set(skullMeta, profile);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				Core.getMessages().debug("Unable to apply legacy skull texture profile: %s", e.getMessage());
+			}
 		}
 		skull.setItemMeta(skullMeta);
 
 		// add displayname and lores to skull
 		skull = Reward.setDisplayNameAndHiddenLores(skull, reward);
 		return skull;
+	}
+
+	private static URL getSkinUrlFromTextureValue(String textureValue) {
+		try {
+			String decoded = new String(Base64.getDecoder().decode(textureValue), StandardCharsets.UTF_8);
+			JsonElement json = new JsonParser().parse(decoded);
+			if (!json.isJsonObject())
+				return null;
+			JsonObject root = json.getAsJsonObject();
+			if (!root.has("textures"))
+				return null;
+			JsonObject textures = root.getAsJsonObject("textures");
+			if (textures == null || !textures.has("SKIN"))
+				return null;
+			JsonObject skin = textures.getAsJsonObject("SKIN");
+			if (skin == null || !skin.has("url"))
+				return null;
+			return new URL(skin.get("url").getAsString());
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	/**
