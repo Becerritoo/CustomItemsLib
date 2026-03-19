@@ -29,8 +29,7 @@ public class ProtocolLibHelper {
 
 		ProtocolLibrary.getProtocolManager()
 				.addPacketListener(new PacketAdapter(Core.getInstance(), ListenerPriority.HIGHEST,
-						PacketType.Play.Server.SET_SLOT, PacketType.Play.Server.WINDOW_ITEMS,
-						PacketType.Play.Server.RECIPES, PacketType.Play.Server.RECIPE_UPDATE) {
+						PacketType.Play.Server.SET_SLOT, PacketType.Play.Server.WINDOW_ITEMS) {
 					@Override
 					public void onPacketSending(PacketEvent event) {
 						if (event.getPacketType() == PacketType.Play.Server.SET_SLOT) {
