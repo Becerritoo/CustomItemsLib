@@ -37,10 +37,12 @@ public class ProtocolLibHelper {
 							StructureModifier<ItemStack> sm = packet.getItemModifier();
 							for (int i = 0; i < sm.size(); i++) {
 								ItemStack is = sm.getValues().get(i);
-								if (is.hasItemMeta()) {
+								if (is != null && is.hasItemMeta()) {
 									ItemMeta itemMeta = is.getItemMeta();
-									if (itemMeta.hasLore()) {
+									if (itemMeta != null && itemMeta.hasLore()) {
 										List<String> lore = itemMeta.getLore();
+										if (lore == null)
+											continue;
 										Iterator<String> itr = lore.iterator();
 										while (itr.hasNext()) {
 											String str = itr.next();
@@ -61,12 +63,16 @@ public class ProtocolLibHelper {
 							StructureModifier<List<ItemStack>> modifiers = packet.getItemListModifier();
 							for (int j = 0; j < modifiers.size(); j++) {
 								List<ItemStack> itemStackList = modifiers.getValues().get(j);
+								if (itemStackList == null)
+									continue;
 								for (int i = 0; i < itemStackList.size(); i++) {
 									ItemStack is = itemStackList.get(i);
-									if (is.hasItemMeta()) {
+									if (is != null && is.hasItemMeta()) {
 										ItemMeta itemMeta = is.getItemMeta();
-										if (itemMeta.hasLore()) {
+										if (itemMeta != null && itemMeta.hasLore()) {
 											List<String> lore = itemMeta.getLore();
+											if (lore == null)
+												continue;
 											Iterator<String> itr = lore.iterator();
 											while (itr.hasNext()) {
 												String str = itr.next();

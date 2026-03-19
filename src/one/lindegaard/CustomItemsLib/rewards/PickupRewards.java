@@ -2,7 +2,6 @@ package one.lindegaard.CustomItemsLib.rewards;
 
 import one.lindegaard.CustomItemsLib.Core;
 import one.lindegaard.CustomItemsLib.Tools;
-import one.lindegaard.CustomItemsLib.compatibility.BagOfGoldCompat;
 import one.lindegaard.CustomItemsLib.compatibility.ProtocolLibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.ProtocolLibHelper;
 
@@ -22,40 +21,44 @@ public class PickupRewards {
 		if (Reward.isReward(item)) {
 			Reward reward = Reward.getReward(item);
 			if (reward.isBagOfGoldReward() || reward.isItemReward()) {
-				callBack.setCancelled(true);
+				// BagOfGold loads after CustomItemsLib, so retry economy discovery on demand.
+				if (!Core.getEconomyManager().isActive())
+					Core.getEconomyManager().setupEconomy();
 
-				boolean succes = false;
-				if (BagOfGoldCompat.isSupported()) {
-					succes = Core.getEconomyManager().depositPlayer(player, reward.getMoney());
-					if (succes) {
-						item.remove();
-						if (Core.getCoreRewardManager().getDroppedMoney().containsKey(item.getEntityId()))
-							Core.getCoreRewardManager().getDroppedMoney().remove(item.getEntityId());
-						if (ProtocolLibCompat.isSupported())
-							ProtocolLibHelper.pickupMoney(player, item);
+				boolean succes = Core.getEconomyManager().depositPlayer(player, reward.getMoney());
+				if (succes) {
+					callBack.setCancelled(true);
+					item.remove();
+					if (Core.getCoreRewardManager().getDroppedMoney().containsKey(item.getEntityId()))
+						Core.getCoreRewardManager().getDroppedMoney().remove(item.getEntityId());
+					if (ProtocolLibCompat.isSupported())
+						ProtocolLibHelper.pickupMoney(player, item);
 
-						if (reward.getMoney() == 0) {
-							Core.getMessages().debug("%s picked up a %s" + ChatColor.RESET + " (# of rewards left=%s)",
-									player.getName(), reward.isItemReward() ? "ITEM" : reward.getDisplayName(),
-									Core.getCoreRewardManager().getDroppedMoney().size());
-						} else {
-							Core.getMessages().debug(
-									"%s picked up a %s" + ChatColor.RESET + " with a value:%s (# of rewards left=%s)(PickupRewards)",
-									player.getName(), reward.isItemReward() ? "ITEM" : reward.getDisplayName(),
-									Tools.format(Tools.round(reward.getMoney())),
-									Core.getCoreRewardManager().getDroppedMoney().size());
-							if (!Core.getPlayerSettingsManager().getPlayerSettings(player).isMuted())
-								Core.getMessages().playerActionBarMessageQueue(player,
-										Core.getMessages().getString("core.moneypickup", "money",
-												Tools.format(reward.getMoney()), "rewardname",
-												ChatColor.valueOf(Core.getConfigManager().rewardTextColor)
-														+ (reward.getDisplayName().isEmpty()
-																? Core.getConfigManager().bagOfGoldName
-																: reward.getDisplayName())));
-						}
+					if (reward.getMoney() == 0) {
+						Core.getMessages().debug("%s picked up a %s" + ChatColor.RESET + " (# of rewards left=%s)",
+								player.getName(), reward.isItemReward() ? "ITEM" : reward.getDisplayName(),
+								Core.getCoreRewardManager().getDroppedMoney().size());
 					} else {
-						callBack.setCancelled(true);
+						Core.getMessages().debug(
+								"%s picked up a %s" + ChatColor.RESET + " with a value:%s (# of rewards left=%s)(PickupRewards)",
+								player.getName(), reward.isItemReward() ? "ITEM" : reward.getDisplayName(),
+								Tools.format(Tools.round(reward.getMoney())),
+								Core.getCoreRewardManager().getDroppedMoney().size());
+						if (!Core.getPlayerSettingsManager().getPlayerSettings(player).isMuted())
+							Core.getMessages().playerActionBarMessageQueue(player,
+									Core.getMessages().getString("core.moneypickup", "money",
+											Tools.format(reward.getMoney()), "rewardname",
+											ChatColor.valueOf(Core.getConfigManager().rewardTextColor)
+													+ (reward.getDisplayName().isEmpty()
+															? Core.getConfigManager().bagOfGoldName
+															: reward.getDisplayName())));
 					}
+				} else {
+					// If no economy provider is active, let vanilla pickup handle the item.
+					callBack.setCancelled(false);
+					Core.getMessages().debug(
+							"Could not deposit reward value to economy for %s; allowing default pickup (reward=%s, value=%s).",
+							player.getName(), reward.getDisplayName(), Tools.format(Tools.round(reward.getMoney())));
 				}
 			}
 		}
