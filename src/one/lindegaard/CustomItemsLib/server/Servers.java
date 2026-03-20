@@ -187,22 +187,58 @@ public class Servers {
 		return Bukkit.getServer().getName().equalsIgnoreCase("Glowstone");
 	}
 
-    public static boolean isPaperServer() {
-        return Bukkit.getServer().getName().equalsIgnoreCase("Paper")
-                && Bukkit.getServer().getVersion().toLowerCase().contains("paper");
-    }
+	private static String serverNameLower() {
+		return Bukkit.getServer().getName().toLowerCase();
+	}
 
-    public static boolean isPurpurServer() {
-        return Bukkit.getServer().getName().equalsIgnoreCase("Purpur")
-                && Bukkit.getServer().getVersion().toLowerCase().contains("purpur");
-    }
+	private static String serverVersionLower() {
+		return Bukkit.getServer().getVersion().toLowerCase();
+	}
+
+	private static boolean classExists(String className) {
+		try {
+			Class.forName(className, false, Bukkit.getServer().getClass().getClassLoader());
+			return true;
+		} catch (Throwable ignored) {
+			return false;
+		}
+	}
+
+	public static boolean isPaperServer() {
+		String name = serverNameLower();
+		String version = serverVersionLower();
+
+		if (name.contains("paper") || version.contains("paper"))
+			return true;
+
+		// Support both legacy and modern Paper package names.
+		return classExists("com.destroystokyo.paper.PaperConfig")
+				|| classExists("io.papermc.paper.configuration.GlobalConfiguration");
+	}
+
+	public static boolean isPurpurServer() {
+		String name = serverNameLower();
+		String version = serverVersionLower();
+
+		if (name.contains("purpur") || version.contains("purpur"))
+			return true;
+
+		return classExists("org.purpurmc.purpur.PurpurConfig");
+	}
 
 	public static boolean isSpigotServer() {
-		return Bukkit.getServer().getName().equalsIgnoreCase("CraftBukkit")
-				&& Bukkit.getServer().getVersion().toLowerCase().contains("spigot");
+		if (isPaperServer() || isPurpurServer())
+			return false;
+
+		String name = serverNameLower();
+		String version = serverVersionLower();
+		return name.contains("spigot") || (name.contains("craftbukkit") && version.contains("spigot"));
 	}
 
 	public static boolean isCraftBukkitServer() {
+		if (isPaperServer() || isPurpurServer() || isSpigotServer())
+			return false;
+
 		return Bukkit.getServer().getName().equalsIgnoreCase("CraftBukkit")
 				&& Bukkit.getServer().getVersion().toLowerCase().contains("bukkit");
 	}
