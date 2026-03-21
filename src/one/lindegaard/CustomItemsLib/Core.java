@@ -175,6 +175,7 @@ public class Core extends JavaPlugin {
 
 		// Hook into Vault or Reserve
 		mEconomyManager = new EconomyManager(this);
+		Bukkit.getPluginManager().registerEvents(new EconomyProviderListener(), this);
 		if (!mEconomyManager.isActive())
 			return;
 		

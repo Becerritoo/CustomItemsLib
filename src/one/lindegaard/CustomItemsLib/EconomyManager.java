@@ -1,6 +1,7 @@
 package one.lindegaard.CustomItemsLib;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -68,6 +69,27 @@ public class EconomyManager {
 		this.version = version;
 	}
 
+	private RegisteredServiceProvider<Economy> getPreferredVaultProvider() {
+		Collection<RegisteredServiceProvider<Economy>> providers = plugin.getServer().getServicesManager()
+				.getRegistrations(Economy.class);
+
+		RegisteredServiceProvider<Economy> bagOfGoldProvider = null;
+		for (RegisteredServiceProvider<Economy> provider : providers) {
+			if (provider == null || provider.getProvider() == null)
+				continue;
+			if ("BagOfGold".equalsIgnoreCase(provider.getProvider().getName())) {
+				if (bagOfGoldProvider == null
+						|| provider.getPriority().compareTo(bagOfGoldProvider.getPriority()) > 0)
+					bagOfGoldProvider = provider;
+			}
+		}
+
+		if (bagOfGoldProvider != null)
+			return bagOfGoldProvider;
+
+		return plugin.getServer().getServicesManager().getRegistration(Economy.class);
+	}
+
 	/**
 	 * Find and configure a suitable economy provider
 	 * 
@@ -75,22 +97,25 @@ public class EconomyManager {
 	 */
 	public Boolean setupEconomy() {
 		Plugin economyProvider = null;
+		EcoType previousType = Type;
+		String previousVersion = getVersion();
 
 		/*
 		 * Attempt to find Vault for Economy handling
 		 */
 		try {
-			RegisteredServiceProvider<Economy> vaultEcoProvider = plugin.getServer().getServicesManager()
-					.getRegistration(net.milkbowl.vault.economy.Economy.class);
+			RegisteredServiceProvider<Economy> vaultEcoProvider = getPreferredVaultProvider();
 			if (vaultEcoProvider != null) {
 				/*
 				 * Flag as using Vault hooks
 				 */
 				vaultEconomy = vaultEcoProvider.getProvider();
+				reserveEconomy = null;
 				setVersion(String.format("%s %s", vaultEcoProvider.getProvider().getName(), "via Vault"));
-				Bukkit.getConsoleSender().sendMessage(
-						Core.PREFIX + "CustomItemsLib is using " + getVersion() + " as Economy Provider");
 				Type = EcoType.VAULT;
+				if (previousType != Type || !previousVersion.equals(getVersion()))
+					Bukkit.getConsoleSender()
+							.sendMessage(Core.PREFIX + "CustomItemsLib is using " + getVersion() + " as Economy Provider");
 				return true;
 			}
 		} catch (NoClassDefFoundError ex) {
@@ -105,12 +130,18 @@ public class EconomyManager {
 			 * Flat as using Reserve Hooks.
 			 */
 			reserveEconomy = ((Reserve) economyProvider).economy();
+			vaultEconomy = null;
 			setVersion(String.format("%s %s", reserveEconomy.name(), "via Reserve"));
-			Bukkit.getConsoleSender()
-					.sendMessage(Core.PREFIX + "CustomItemsLib is using " + getVersion() + " as Economy Provider");
 			Type = EcoType.RESERVE;
+			if (previousType != Type || !previousVersion.equals(getVersion()))
+				Bukkit.getConsoleSender()
+						.sendMessage(Core.PREFIX + "CustomItemsLib is using " + getVersion() + " as Economy Provider");
 			return true;
 		}
+		vaultEconomy = null;
+		reserveEconomy = null;
+		setVersion("");
+		Type = EcoType.NONE;
 		return false;
 	}
 
