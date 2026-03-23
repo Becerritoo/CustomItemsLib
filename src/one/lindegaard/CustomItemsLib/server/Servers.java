@@ -4,180 +4,183 @@ import org.bukkit.Bukkit;
 
 public class Servers {
 
+	private static final VersionInfo SERVER_VERSION = detectServerVersion();
+
+	private static final class VersionInfo {
+		private final int major;
+		private final int minor;
+		private final int patch;
+		private final boolean valid;
+
+		private VersionInfo(int major, int minor, int patch, boolean valid) {
+			this.major = major;
+			this.minor = minor;
+			this.patch = patch;
+			this.valid = valid;
+		}
+	}
+
+	private static VersionInfo detectServerVersion() {
+		try {
+			String bukkitVersion = Bukkit.getBukkitVersion();
+			String coreVersion = bukkitVersion.split("-", 2)[0];
+			String[] numbers = coreVersion.split("\\.");
+			if (numbers.length < 2) {
+				return new VersionInfo(0, 0, 0, false);
+			}
+
+			int major = Integer.parseInt(numbers[0]);
+			int minor = Integer.parseInt(numbers[1]);
+			int patch = numbers.length >= 3 ? Integer.parseInt(numbers[2]) : 0;
+			return new VersionInfo(major, minor, patch, true);
+		} catch (Exception ignored) {
+			return new VersionInfo(0, 0, 0, false);
+		}
+	}
+
+	private static boolean isVersion(int major, int minor) {
+		return SERVER_VERSION.valid && SERVER_VERSION.major == major && SERVER_VERSION.minor == minor;
+	}
+
+	private static boolean isVersion(int major, int minor, int patch) {
+		return SERVER_VERSION.valid && SERVER_VERSION.major == major && SERVER_VERSION.minor == minor
+				&& SERVER_VERSION.patch == patch;
+	}
+
+	private static boolean isAtLeast(int major, int minor) {
+		return isAtLeast(major, minor, 0);
+	}
+
+	private static boolean isAtLeast(int major, int minor, int patch) {
+		// Fail-open for unknown version formats to preserve legacy behavior.
+		if (!SERVER_VERSION.valid)
+			return true;
+
+		if (SERVER_VERSION.major != major)
+			return SERVER_VERSION.major > major;
+		if (SERVER_VERSION.minor != minor)
+			return SERVER_VERSION.minor > minor;
+		return SERVER_VERSION.patch >= patch;
+	}
+
 	// *******************************************************************
 	// Version detection
 	// *******************************************************************
 
 	public static boolean isMC121() {
-		return Bukkit.getBukkitVersion().contains("1.21");
+		return isVersion(1, 21);
 	}
 
 	public static boolean isMC120() {
-		return Bukkit.getBukkitVersion().contains("1.20");
+		return isVersion(1, 20);
 	}
 	
 	public static boolean isMC119() {
-		return Bukkit.getBukkitVersion().contains("1.19");
+		return isVersion(1, 19);
 	}
 	
 	public static boolean isMC118() {
-		return Bukkit.getBukkitVersion().contains("1.18");
+		return isVersion(1, 18);
 	}
 	
 	public static boolean isMC117() {
-		return Bukkit.getBukkitVersion().contains("1.17");
+		return isVersion(1, 17);
 	}
 	
 	public static boolean isMC1162() {
-		return Bukkit.getBukkitVersion().contains("1.16.2");
+		return isVersion(1, 16, 2);
 	}
 	
 	public static boolean isMC116() {
-		return Bukkit.getBukkitVersion().contains("1.16");
+		return isVersion(1, 16);
 	}
 	
 	public static boolean isMC115() {
-		return Bukkit.getBukkitVersion().contains("1.15");
+		return isVersion(1, 15);
 	}
 
 	public static boolean isMC114() {
-		return Bukkit.getBukkitVersion().contains("1.14");
+		return isVersion(1, 14);
 	}
 
 	public static boolean isMC113() {
-		return Bukkit.getBukkitVersion().contains("1.13");
+		return isVersion(1, 13);
 	}
 
 	public static boolean isMC112() {
-		return Bukkit.getBukkitVersion().contains("1.12");
+		return isVersion(1, 12);
 	}
 
 	public static boolean isMC111() {
-		return Bukkit.getBukkitVersion().contains("1.11");
+		return isVersion(1, 11);
 	}
 
 	public static boolean isMC110() {
-		return Bukkit.getBukkitVersion().contains("1.10");
+		return isVersion(1, 10);
 	}
 
 	public static boolean isMC19() {
-		return Bukkit.getBukkitVersion().matches("1\\.9[^0-9].*");
+		return isVersion(1, 9);
 	}
 
 	public static boolean isMC18() {
-		return Bukkit.getBukkitVersion().matches("1\\.8[^0-9].*");
+		return isVersion(1, 8);
 	}
 
 	public static boolean isMC121OrNewer() {
-		if (isMC121())
-			return true;
-		else if (isMC120() || isMC119() || isMC118() || isMC117() || isMC1162() || isMC116() || isMC115() || isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 21);
 	}
 
 	public static boolean isMC120OrNewer() {
-		if (isMC120())
-			return true;
-		else if (isMC119() || isMC118() || isMC117() || isMC1162() || isMC116() || isMC115() || isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 20);
 	}
 
 	public static boolean isMC119OrNewer() {
-		if (isMC119())
-			return true;
-		else if (isMC118() || isMC117() || isMC1162() || isMC116() || isMC115() || isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 19);
 	}
 	
 	public static boolean isMC118OrNewer() {
-		if (isMC118())
-			return true;
-		else if (isMC117() || isMC1162() || isMC116() || isMC115() || isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 18);
 	}
 	
 	public static boolean isMC117OrNewer() {
-		if (isMC117())
-			return true;
-		else if (isMC1162() || isMC116() || isMC115() || isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 17);
 	}
 	
 	public static boolean isMC1162OrNewer() {
-		if (isMC1162())
-			return true;
-		else if (isMC116() || isMC115() || isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 16, 2);
 	}
 	
 	public static boolean isMC116OrNewer() {
-		if (isMC116())
-			return true;
-		else if (isMC115() || isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 16);
 	}
 
 	public static boolean isMC115OrNewer() {
-		if (isMC115())
-			return true;
-		else if (isMC114() || isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 15);
 	}
 
 	public static boolean isMC114OrNewer() {
-		if (isMC114())
-			return true;
-		else if (isMC113() || isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 14);
 	}
 
 	public static boolean isMC113OrNewer() {
-		if (isMC113())
-			return true;
-		else if (isMC112() || isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 13);
 	}
 
 	public static boolean isMC112OrNewer() {
-		if (isMC112())
-			return true;
-		else if (isMC111() || isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 12);
 	}
 
 	public static boolean isMC111OrNewer() {
-		if (isMC111())
-			return true;
-		else if (isMC110() || isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 11);
 	}
 
 	public static boolean isMC110OrNewer() {
-		if (isMC110())
-			return true;
-		else if (isMC19() || isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 10);
 	}
 
 	public static boolean isMC19OrNewer() {
-		if (isMC19())
-			return true;
-		else if (isMC18())
-			return false;
-		return true;
+		return isAtLeast(1, 9);
 	}
 
 	// *******************************************************************
