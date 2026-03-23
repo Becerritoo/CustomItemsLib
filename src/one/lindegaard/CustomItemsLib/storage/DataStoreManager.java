@@ -1,6 +1,7 @@
 package one.lindegaard.CustomItemsLib.storage;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -92,14 +93,45 @@ public class DataStoreManager {
 	 * @throws UserNotFoundException
 	 */
 	public int getPlayerId(OfflinePlayer offlinePlayer) throws UserNotFoundException {
+		if (offlinePlayer == null)
+			return 0;
+
 		try {
-			return mStore.getPlayerId(offlinePlayer);
+			int playerId = mStore.getPlayerId(offlinePlayer);
+			if (playerId > 0)
+				return playerId;
 		} catch (DataStoreException e) {
 			if (Core.getConfigManager().debug)
 				e.printStackTrace();
 		}
+
+		try {
+			PlayerSettings playerSettings;
+			try {
+				playerSettings = mStore.loadPlayerSettings(offlinePlayer);
+			} catch (UserNotFoundException e) {
+				String worldgroup = offlinePlayer.isOnline()
+						? Core.getWorldGroupManager().getCurrentWorldGroup(offlinePlayer)
+						: Core.getWorldGroupManager().getDefaultWorldgroup();
+				playerSettings = new PlayerSettings(offlinePlayer, worldgroup, Core.getConfigManager().learningMode, false,
+						null, null, System.currentTimeMillis(), System.currentTimeMillis());
+			}
+
+			Set<PlayerSettings> playerDataSet = new LinkedHashSet<PlayerSettings>();
+			playerDataSet.add(playerSettings);
+			mStore.savePlayerSettings(playerDataSet, false);
+
+			int recoveredPlayerId = mStore.getPlayerId(offlinePlayer);
+			if (recoveredPlayerId > 0)
+				return recoveredPlayerId;
+		} catch (DataStoreException e) {
+			if (Core.getConfigManager().debug)
+				e.printStackTrace();
+		}
+
 		throw new UserNotFoundException(
-				Core.PREFIX + " User " + offlinePlayer.getName() + " is not present in Core database");
+				Core.PREFIX + " User " + offlinePlayer.getName() + " (" + offlinePlayer.getUniqueId()
+						+ ") is not present in Core database");
 	}
 
 	public OfflinePlayer getPlayerByPlayerId(int playerId) throws UserNotFoundException {
