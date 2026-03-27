@@ -2,8 +2,11 @@ package one.lindegaard.CustomItemsLib.compatibility;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
+import java.lang.reflect.Method;
 
 import org.bukkit.GameMode;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -32,6 +35,11 @@ public class ProtocolLibHelper {
 						PacketType.Play.Server.SET_SLOT, PacketType.Play.Server.WINDOW_ITEMS) {
 					@Override
 					public void onPacketSending(PacketEvent event) {
+						boolean hideInternalLore = shouldHideInternalLore(event);
+						if (!hideInternalLore) {
+							return;
+						}
+
 						if (event.getPacketType() == PacketType.Play.Server.SET_SLOT) {
 							PacketContainer packet = event.getPacket().deepClone();
 							StructureModifier<ItemStack> sm = packet.getItemModifier();
@@ -47,8 +55,7 @@ public class ProtocolLibHelper {
 										while (itr.hasNext()) {
 											String str = itr.next();
 											if (str.startsWith("Hidden("))
-												if (event.getPlayer().getGameMode() == GameMode.SURVIVAL)
-													itr.remove();
+												itr.remove();
 										}
 										itemMeta.setLore(lore);
 										is.setItemMeta(itemMeta);
@@ -77,10 +84,8 @@ public class ProtocolLibHelper {
 											while (itr.hasNext()) {
 												String str = itr.next();
 												if (str.startsWith("Hidden("))
-													if (event.getPlayer().getGameMode() == GameMode.SURVIVAL) {
-//														BagOfGold.getInstance().getMessages().debug("ProtocolLibHelper:ItemSlots=%s", event.getPacket().getItemSlots().toString());
-														itr.remove();
-													}
+//													BagOfGold.getInstance().getMessages().debug("ProtocolLibHelper:ItemSlots=%s", event.getPacket().getItemSlots().toString());
+													itr.remove();
 											}
 											itemMeta.setLore(lore);
 											is.setItemMeta(itemMeta);
@@ -94,6 +99,67 @@ public class ProtocolLibHelper {
 
 					
 				});
+	}
+
+	private static boolean shouldHideInternalLore(PacketEvent event) {
+		if (event == null) {
+			return false;
+		}
+
+		Player player = event.getPlayer();
+		if (player == null) {
+			return false;
+		}
+
+		if (isTemporaryPlayer(event)) {
+			Player resolved = resolveOnlinePlayer(player);
+			return resolved != null && resolved.getGameMode() == GameMode.SURVIVAL;
+		}
+
+		try {
+			return player.getGameMode() == GameMode.SURVIVAL;
+		} catch (UnsupportedOperationException ex) {
+			Player resolved = resolveOnlinePlayer(player);
+			return resolved != null && resolved.getGameMode() == GameMode.SURVIVAL;
+		}
+	}
+
+	private static boolean isTemporaryPlayer(PacketEvent event) {
+		try {
+			Method method = event.getClass().getMethod("isPlayerTemporary");
+			Object value = method.invoke(event);
+			if (value instanceof Boolean) {
+				return (Boolean) value;
+			}
+		} catch (Exception ignored) {
+		}
+		return false;
+	}
+
+	private static Player resolveOnlinePlayer(Player player) {
+		try {
+			UUID uuid = player.getUniqueId();
+			if (uuid != null) {
+				Player online = Bukkit.getPlayer(uuid);
+				if (online != null && online.isOnline()) {
+					return online;
+				}
+			}
+		} catch (Exception ignored) {
+		}
+
+		try {
+			String name = player.getName();
+			if (name != null && !name.isEmpty()) {
+				Player online = Bukkit.getPlayerExact(name);
+				if (online != null && online.isOnline()) {
+					return online;
+				}
+			}
+		} catch (Exception ignored) {
+		}
+
+		return null;
 	}
 
 	public static ProtocolManager getProtocolmanager() {
