@@ -28,7 +28,7 @@ public class ProtocolLibHelper {
 
 		ProtocolLibrary.getProtocolManager()
 				.addPacketListener(new PacketAdapter(Core.getInstance(), ListenerPriority.HIGHEST,
-						PacketType.Play.Server.SET_SLOT, PacketType.Play.Server.WINDOW_ITEMS) {
+						PacketType.Play.Server.getInstance().values().toArray(new PacketType[0])) {
 					@Override
 					public void onPacketSending(PacketEvent event) {
 						boolean hideInternalLore = shouldHideInternalLore(event);
@@ -36,59 +36,43 @@ public class ProtocolLibHelper {
 							return;
 						}
 
-						if (event.getPacketType() == PacketType.Play.Server.SET_SLOT) {
-							PacketContainer packet = event.getPacket().deepClone();
-							StructureModifier<ItemStack> sm = packet.getItemModifier();
-							for (int i = 0; i < sm.size(); i++) {
-								ItemStack is = sm.getValues().get(i);
-								if (is != null && is.hasItemMeta()) {
-									ItemMeta itemMeta = is.getItemMeta();
-									if (itemMeta != null && itemMeta.hasLore()) {
-										List<String> lore = itemMeta.getLore();
-										if (lore == null)
-											continue;
-											Iterator<String> itr = lore.iterator();
-											while (itr.hasNext()) {
-												String str = itr.next();
-												if (isInternalHiddenLoreLine(str))
-													itr.remove();
-											}
-										itemMeta.setLore(lore);
-										is.setItemMeta(itemMeta);
-									}
-								}
+						PacketContainer packet = event.getPacket().deepClone();
+						boolean changed = false;
+
+						StructureModifier<ItemStack> itemModifier = packet.getItemModifier();
+						for (int i = 0; i < itemModifier.size(); i++) {
+							ItemStack itemStack = itemModifier.read(i);
+							ItemStack sanitized = sanitizeHiddenLore(itemStack);
+							if (sanitized != itemStack) {
+								itemModifier.write(i, sanitized);
+								changed = true;
 							}
-							event.setPacket(packet);
 						}
 
-				else if (event.getPacketType() == PacketType.Play.Server.WINDOW_ITEMS) {
-							PacketContainer packet = event.getPacket().deepClone();
-							StructureModifier<List<ItemStack>> modifiers = packet.getItemListModifier();
-							for (int j = 0; j < modifiers.size(); j++) {
-								List<ItemStack> itemStackList = modifiers.getValues().get(j);
-								if (itemStackList == null)
-									continue;
-								for (int i = 0; i < itemStackList.size(); i++) {
-									ItemStack is = itemStackList.get(i);
-									if (is != null && is.hasItemMeta()) {
-										ItemMeta itemMeta = is.getItemMeta();
-										if (itemMeta != null && itemMeta.hasLore()) {
-											List<String> lore = itemMeta.getLore();
-											if (lore == null)
-												continue;
-											Iterator<String> itr = lore.iterator();
-											while (itr.hasNext()) {
-												String str = itr.next();
-												if (isInternalHiddenLoreLine(str))
-//													BagOfGold.getInstance().getMessages().debug("ProtocolLibHelper:ItemSlots=%s", event.getPacket().getItemSlots().toString());
-													itr.remove();
-											}
-											itemMeta.setLore(lore);
-											is.setItemMeta(itemMeta);
-										}
-									}
+						StructureModifier<List<ItemStack>> listModifier = packet.getItemListModifier();
+						for (int i = 0; i < listModifier.size(); i++) {
+							List<ItemStack> itemList = listModifier.read(i);
+							if (itemList == null || itemList.isEmpty()) {
+								continue;
+							}
+
+							boolean listChanged = false;
+							for (int j = 0; j < itemList.size(); j++) {
+								ItemStack original = itemList.get(j);
+								ItemStack sanitized = sanitizeHiddenLore(original);
+								if (sanitized != original) {
+									itemList.set(j, sanitized);
+									listChanged = true;
 								}
 							}
+
+							if (listChanged) {
+								listModifier.write(i, itemList);
+								changed = true;
+							}
+						}
+
+						if (changed) {
 							event.setPacket(packet);
 						}
 					}
@@ -123,6 +107,45 @@ public class ProtocolLibHelper {
 		}
 
 		return plain.trim().startsWith("Hidden(");
+	}
+
+	private static ItemStack sanitizeHiddenLore(ItemStack itemStack) {
+		if (itemStack == null || !itemStack.hasItemMeta()) {
+			return itemStack;
+		}
+
+		ItemMeta itemMeta = itemStack.getItemMeta();
+		if (itemMeta == null || !itemMeta.hasLore()) {
+			return itemStack;
+		}
+
+		List<String> lore = itemMeta.getLore();
+		if (lore == null || lore.isEmpty()) {
+			return itemStack;
+		}
+
+		List<String> filtered = new java.util.ArrayList<>(lore.size());
+		boolean removed = false;
+		for (String line : lore) {
+			if (isInternalHiddenLoreLine(line)) {
+				removed = true;
+				continue;
+			}
+			filtered.add(line);
+		}
+
+		if (!removed) {
+			return itemStack;
+		}
+
+		ItemStack cloned = itemStack.clone();
+		ItemMeta clonedMeta = cloned.getItemMeta();
+		if (clonedMeta == null) {
+			return itemStack;
+		}
+		clonedMeta.setLore(filtered.isEmpty() ? null : filtered);
+		cloned.setItemMeta(clonedMeta);
+		return cloned;
 	}
 
 	public static ProtocolManager getProtocolmanager() {
