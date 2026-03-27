@@ -2,6 +2,7 @@ package one.lindegaard.CustomItemsLib.compatibility;
 
 import java.util.Iterator;
 import java.util.List;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -46,12 +47,12 @@ public class ProtocolLibHelper {
 										List<String> lore = itemMeta.getLore();
 										if (lore == null)
 											continue;
-										Iterator<String> itr = lore.iterator();
-										while (itr.hasNext()) {
-											String str = itr.next();
-											if (str.startsWith("Hidden("))
-												itr.remove();
-										}
+											Iterator<String> itr = lore.iterator();
+											while (itr.hasNext()) {
+												String str = itr.next();
+												if (isInternalHiddenLoreLine(str))
+													itr.remove();
+											}
 										itemMeta.setLore(lore);
 										is.setItemMeta(itemMeta);
 									}
@@ -78,7 +79,7 @@ public class ProtocolLibHelper {
 											Iterator<String> itr = lore.iterator();
 											while (itr.hasNext()) {
 												String str = itr.next();
-												if (str.startsWith("Hidden("))
+												if (isInternalHiddenLoreLine(str))
 //													BagOfGold.getInstance().getMessages().debug("ProtocolLibHelper:ItemSlots=%s", event.getPacket().getItemSlots().toString());
 													itr.remove();
 											}
@@ -109,6 +110,19 @@ public class ProtocolLibHelper {
 		// Hidden(...) lore is internal metadata and must never be visible to clients.
 		// Always strip it for packet-rendered items (Java + Bedrock via Geyser/Floodgate).
 		return true;
+	}
+
+	private static boolean isInternalHiddenLoreLine(String line) {
+		if (line == null || line.isEmpty()) {
+			return false;
+		}
+
+		String plain = ChatColor.stripColor(line);
+		if (plain == null) {
+			return false;
+		}
+
+		return plain.trim().startsWith("Hidden(");
 	}
 
 	public static ProtocolManager getProtocolmanager() {
