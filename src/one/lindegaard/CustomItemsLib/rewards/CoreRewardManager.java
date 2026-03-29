@@ -181,6 +181,24 @@ public class CoreRewardManager {
 				if (reward.checkHash()) {
 					if (reward.isMoney()) {
 						double saldo = Tools.round(reward.getMoney());
+						double consumedFromToken = saldo > toBeTaken ? toBeTaken : saldo;
+						TokenSpendStore.MarkResult spendResult = TokenSpendStore.MarkResult.MARKED;
+						if (Core.getTokenSpendStore() != null) {
+							spendResult = Core.getTokenSpendStore().markTokenSpent(reward.getTokenUUID(),
+									player.getUniqueId(), "inventory-spend", consumedFromToken);
+						}
+						if (spendResult == TokenSpendStore.MarkResult.DUPLICATE) {
+							Core.getMessages().debug(
+									"Rejected duplicated inventory token while spending for %s (token=%s, slot=%s).",
+									player.getName(), reward.getTokenUUID(), slot);
+							player.getInventory().clear(slot);
+							continue;
+						}
+						if (spendResult == TokenSpendStore.MarkResult.ERROR) {
+							Core.getMessages().debug(
+									"Token spend store unavailable while spending inventory token for %s. Falling back to signature-only check.",
+									player.getName());
+						}
 						if (saldo > toBeTaken) {
 							reward.setMoney(Tools.round(saldo - toBeTaken));
 							is = Reward.setDisplayNameAndHiddenLores(is, reward);

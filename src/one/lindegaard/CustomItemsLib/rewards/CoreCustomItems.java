@@ -6,9 +6,7 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Locale;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -57,7 +55,6 @@ import one.lindegaard.Core.v1_9_R1.Skins_1_9_R1;
 import one.lindegaard.Core.v1_9_R2.Skins_1_9_R2;
 import one.lindegaard.CustomItemsLib.Core;
 import one.lindegaard.CustomItemsLib.PlayerSettings;
-import one.lindegaard.CustomItemsLib.Strings;
 import one.lindegaard.CustomItemsLib.mobs.MobType;
 import one.lindegaard.CustomItemsLib.server.Servers;
 
@@ -327,12 +324,8 @@ public class CoreCustomItems {
 		SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
 
 		skull.setItemMeta(skullMeta);
-		skull = Reward.setDisplayNameAndHiddenLores(skull, name, money, new ArrayList<String>(Arrays.asList(
-				"Hidden(0):" + name, "Hidden(1):" + String.format(Locale.ENGLISH, "%.5f", money),
-				"Hidden(2):" + RewardType.KILLED.getType(), "Hidden(4):" + uuid,
-				"Hidden(5):"
-						+ Strings.encode(String.format(Locale.ENGLISH, "%.5f", money) + RewardType.KILLED.getType()),
-				Core.getMessages().getString("core.reward.lore"))));
+		skull = Reward.setDisplayNameAndHiddenLores(skull,
+				new Reward(name, money, RewardType.KILLED, uuid));
 		Core.getMessages().debug("CustomItems: set the skin using OwningPlayer/Owner (%s)", name);
 		return skull;
 	}

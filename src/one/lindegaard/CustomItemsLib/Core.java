@@ -32,7 +32,9 @@ import one.lindegaard.CustomItemsLib.compatibility.TitleManagerCompat;
 import one.lindegaard.CustomItemsLib.config.ConfigManager;
 import one.lindegaard.CustomItemsLib.messages.Messages;
 import one.lindegaard.CustomItemsLib.rewards.CoreRewardManager;
+import one.lindegaard.CustomItemsLib.rewards.RewardSecurity;
 import one.lindegaard.CustomItemsLib.rewards.RewardBlockManager;
+import one.lindegaard.CustomItemsLib.rewards.TokenSpendStore;
 import one.lindegaard.CustomItemsLib.storage.DataStoreException;
 import one.lindegaard.CustomItemsLib.storage.DataStoreManager;
 import one.lindegaard.CustomItemsLib.storage.IDataStore;
@@ -54,6 +56,8 @@ public class Core extends JavaPlugin {
 	private static DataStoreManager mDataStoreManager;
 	private static PlayerSettingsManager mPlayerSettingsManager;
 	private static CoreRewardManager mCoreRewardManager;
+	private static RewardSecurity mRewardSecurity;
+	private static TokenSpendStore mTokenSpendStore;
 	private static CompatibilityManager mCompatibilityManager;
 	private CommandDispatcher mCommandDispatcher;
 	private SpigetUpdater mSpigetUpdater;
@@ -117,6 +121,14 @@ public class Core extends JavaPlugin {
 		mMessages.setLanguage(mConfig.language + ".lang");
 		mMessages.debug("Loading config.yml file, version %s", config_version);
 
+		mRewardSecurity = new RewardSecurity(this);
+		try {
+			mRewardSecurity.initialize();
+		} catch (IOException ex) {
+			Bukkit.getConsoleSender().sendMessage(PREFIX_ERROR + "Could not initialize security.yml: " + ex.getMessage());
+			throw new RuntimeException("[CustomItemsLib] Could not initialize security.yml", ex);
+		}
+
 		List<String> itemtypes = Arrays.asList("SKULL", "ITEM", "KILLER", "KILLED", "GRINGOTTS_STYLE");
 		if (!itemtypes.contains(mConfig.rewardItemtype)) {
 			Bukkit.getConsoleSender().sendMessage(PREFIX + ChatColor.RED
@@ -151,6 +163,14 @@ public class Core extends JavaPlugin {
 				e1.printStackTrace();
 			}
 			return;
+		}
+
+		mTokenSpendStore = new TokenSpendStore(this);
+		try {
+			mTokenSpendStore.initialize();
+		} catch (Exception ex) {
+			Bukkit.getConsoleSender().sendMessage(PREFIX_ERROR + "Could not initialize token spend store: " + ex.getMessage());
+			throw new RuntimeException("[CustomItemsLib] Could not initialize token spend store", ex);
 		}
 
 		mDataStoreManager = new DataStoreManager(plugin, mStore);
@@ -237,6 +257,14 @@ public class Core extends JavaPlugin {
 
 	public static CoreRewardManager getCoreRewardManager() {
 		return mCoreRewardManager;
+	}
+
+	public static RewardSecurity getRewardSecurity() {
+		return mRewardSecurity;
+	}
+
+	public static TokenSpendStore getTokenSpendStore() {
+		return mTokenSpendStore;
 	}
 
 	public SpigetUpdater getSpigetUpdater() {

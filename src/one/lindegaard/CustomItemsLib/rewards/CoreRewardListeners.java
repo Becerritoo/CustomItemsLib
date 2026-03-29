@@ -38,7 +38,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 
@@ -998,10 +997,14 @@ public class CoreRewardListeners implements Listener {
 					break;
 				case SWAP_WITH_CURSOR:
 					if (Reward.isReward(isCurrentSlot) && Reward.isReward(isCursor)) {
-						ItemMeta imCurrent = isCurrentSlot.getItemMeta();
-						ItemMeta imCursor = isCursor.getItemMeta();
-						Reward reward1 = new Reward(imCurrent.getLore());
-						Reward reward2 = new Reward(imCursor.getLore());
+						Reward reward1 = Reward.getReward(isCurrentSlot);
+						Reward reward2 = Reward.getReward(isCursor);
+						if (reward1 == null || reward2 == null) {
+							event.setCancelled(true);
+							Core.getMessages().debug(
+									"SWAP_WITH_CURSOR: cancelled because reward metadata could not be parsed from PDC.");
+							break;
+						}
 						int amount_reward1 = isCurrentSlot.getAmount();
 						int amount_reward2 = isCursor.getAmount();
 						if (reward2.isMoney() && slotType == SlotType.ARMOR) {

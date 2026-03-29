@@ -1,6 +1,5 @@
 package one.lindegaard.CustomItemsLib.compatibility;
 
-import java.util.Iterator;
 import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
@@ -26,9 +25,10 @@ public class ProtocolLibHelper {
 	public static void enableProtocolLib() {
 		protocolManager = ProtocolLibrary.getProtocolManager();
 
-		ProtocolLibrary.getProtocolManager()
-				.addPacketListener(new PacketAdapter(Core.getInstance(), ListenerPriority.HIGHEST,
-						PacketType.Play.Server.getInstance().values().toArray(new PacketType[0])) {
+		// Only hook packet types that carry inventory items on modern Paper versions.
+		// Registering every enum value causes ProtocolLib warnings for legacy/unregistered packets.
+		protocolManager.addPacketListener(new PacketAdapter(Core.getInstance(), ListenerPriority.HIGHEST,
+				PacketType.Play.Server.SET_SLOT, PacketType.Play.Server.WINDOW_ITEMS) {
 					@Override
 					public void onPacketSending(PacketEvent event) {
 						boolean hideInternalLore = shouldHideInternalLore(event);

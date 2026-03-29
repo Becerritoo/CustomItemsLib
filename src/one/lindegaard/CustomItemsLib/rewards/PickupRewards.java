@@ -20,13 +20,51 @@ public class PickupRewards {
 	public void rewardPlayer(Player player, Item item, CallBack callBack) {
 		if (Reward.isReward(item)) {
 			Reward reward = Reward.getReward(item);
+			if (reward == null) {
+				callBack.setCancelled(false);
+				return;
+			}
 			if (reward.isBagOfGoldReward() || reward.isItemReward()) {
 				// BagOfGold loads after CustomItemsLib, so retry economy discovery on demand.
 				if (!Core.getEconomyManager().isActive())
 					Core.getEconomyManager().setupEconomy();
 
+				if (!reward.checkHash()) {
+					Core.getMessages().debug("Rejected reward token for %s because signature verification failed.", player.getName());
+					callBack.setCancelled(true);
+					item.remove();
+					if (Core.getCoreRewardManager().getDroppedMoney().containsKey(item.getEntityId()))
+						Core.getCoreRewardManager().getDroppedMoney().remove(item.getEntityId());
+					return;
+				}
+
 				boolean succes = Core.getEconomyManager().depositPlayer(player, reward.getMoney());
 				if (succes) {
+					TokenSpendStore.MarkResult spendResult = TokenSpendStore.MarkResult.MARKED;
+					if (Core.getTokenSpendStore() != null) {
+						spendResult = Core.getTokenSpendStore().markTokenSpent(reward.getTokenUUID(),
+								player.getUniqueId(), "pickup", reward.getMoney());
+					}
+					if (spendResult != TokenSpendStore.MarkResult.MARKED) {
+						// Roll back if we deposited but could not mark token consumption.
+						Core.getEconomyManager().withdrawPlayer(player, reward.getMoney());
+						if (spendResult == TokenSpendStore.MarkResult.DUPLICATE) {
+							Core.getMessages().debug(
+									"Rejected duplicated reward token for %s (token=%s). Deposit rolled back.",
+									player.getName(), reward.getTokenUUID());
+							callBack.setCancelled(true);
+							item.remove();
+							if (Core.getCoreRewardManager().getDroppedMoney().containsKey(item.getEntityId()))
+								Core.getCoreRewardManager().getDroppedMoney().remove(item.getEntityId());
+						} else {
+							Core.getMessages().debug(
+									"Token store unavailable for %s (token=%s). Deposit rolled back and default pickup allowed.",
+									player.getName(), reward.getTokenUUID());
+							callBack.setCancelled(false);
+						}
+						return;
+					}
+
 					callBack.setCancelled(true);
 					item.remove();
 					if (Core.getCoreRewardManager().getDroppedMoney().containsKey(item.getEntityId()))
