@@ -1,6 +1,8 @@
 package one.lindegaard.CustomItemsLib.storage;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
@@ -15,6 +17,7 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import one.lindegaard.CustomItemsLib.Core;
 
 public class MySQLDataStore extends DatabaseDataStore {
+	private static final int PLAYER_NAME_LENGTH = 64;
 
 	private Plugin plugin;
 
@@ -125,7 +128,7 @@ public class MySQLDataStore extends DatabaseDataStore {
 		create.executeUpdate("CREATE TABLE IF NOT EXISTS mh_PlayerSettings "//
 				+ "(UUID CHAR(40),"//
 				+ " PLAYER_ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"//
-				+ " NAME VARCHAR(20),"//
+				+ " NAME VARCHAR(" + PLAYER_NAME_LENGTH + "),"//
 				+ " LAST_WORLDGRP VARCHAR(20) NOT NULL DEFAULT 'default'," //
 				+ " LEARNING_MODE INTEGER NOT NULL DEFAULT " + lm + ","//
 				+ " MUTE_MODE INTEGER NOT NULL DEFAULT 0, "//
@@ -134,8 +137,29 @@ public class MySQLDataStore extends DatabaseDataStore {
 				+ " LAST_LOGON BIGINT, " //
 				+ " LAST_INTEREST BIGINT, "
 				+ " UNIQUE(UUID))");
+		ensurePlayerNameCapacity(connection);
 		create.close();
 		connection.commit();
+	}
+
+	private void ensurePlayerNameCapacity(Connection connection) throws SQLException {
+		int currentLength = 0;
+		try (PreparedStatement query = connection.prepareStatement(
+				"SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS "
+						+ "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='mh_PlayerSettings' AND COLUMN_NAME='NAME'");
+				ResultSet result = query.executeQuery()) {
+			if (result.next())
+				currentLength = result.getInt(1);
+		}
+
+		if (currentLength > 0 && currentLength < PLAYER_NAME_LENGTH) {
+			plugin.getLogger().info("Expanding mh_PlayerSettings.NAME from VARCHAR(" + currentLength
+					+ ") to VARCHAR(" + PLAYER_NAME_LENGTH + ").");
+			try (Statement alter = connection.createStatement()) {
+				alter.executeUpdate("ALTER TABLE mh_PlayerSettings MODIFY COLUMN NAME VARCHAR("
+						+ PLAYER_NAME_LENGTH + ") NULL");
+			}
+		}
 	}
 
 }
