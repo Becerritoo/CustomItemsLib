@@ -321,6 +321,10 @@ public class ConfigManager extends AutoConfig {
 			+ "\nhttps://www.spigotmc.org/resources/cmi-270-commands-insane-kits-portals-essentials-economy-mysql-sqlite-much-more.3742/")
 	public boolean enableIntegrationCMI = true;
 
+	@ConfigField(name = "enable_integration_cmilib", category = "plugins.cmilib", comment = "Enable/Disable action bar and boss bar integration with CMILib."
+			+ "\nhttps://www.spigotmc.org/resources/cmilib.87610/")
+	public boolean enableIntegrationCMILib = true;
+
 	@ConfigField(name = "enable_integration_protocollib", category = "plugins.protocollib", comment = "Enable/Disable integration with ProtocolLib."
 			+ "\nhttps://www.spigotmc.org/resources/protocollib.1997/")
 	public boolean enableIntegrationProtocolLib = true;

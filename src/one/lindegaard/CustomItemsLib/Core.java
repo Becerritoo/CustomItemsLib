@@ -23,6 +23,7 @@ import one.lindegaard.CustomItemsLib.compatibility.BagOfGoldCompat;
 import one.lindegaard.CustomItemsLib.compatibility.BarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.BossBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.CMICompat;
+import one.lindegaard.CustomItemsLib.compatibility.CMILibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.CompatPlugin;
 import one.lindegaard.CustomItemsLib.compatibility.CompatibilityManager;
 import one.lindegaard.CustomItemsLib.compatibility.MobHuntingCompat;
@@ -183,6 +184,7 @@ public class Core extends JavaPlugin {
 		mCompatibilityManager.registerPlugin(BossBarAPICompat.class, CompatPlugin.BossBarApi);
 		mCompatibilityManager.registerPlugin(BarAPICompat.class, CompatPlugin.BarApi);
 		mCompatibilityManager.registerPlugin(CMICompat.class, CompatPlugin.CMI);
+		mCompatibilityManager.registerPlugin(CMILibCompat.class, CompatPlugin.CMILib);
 
 		mCompatibilityManager.registerPlugin(BagOfGoldCompat.class, CompatPlugin.BagOfGold);
 		mCompatibilityManager.registerPlugin(MobHuntingCompat.class, CompatPlugin.MobHunting);
