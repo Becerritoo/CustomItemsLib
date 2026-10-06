@@ -156,13 +156,7 @@ public class Core extends JavaPlugin {
 		try {
 			mStore.initialize();
 		} catch (DataStoreException e) {
-			e.printStackTrace();
-			try {
-				mStore.shutdown();
-			} catch (DataStoreException e1) {
-				e1.printStackTrace();
-			}
-			return;
+			throw new IllegalStateException("[CustomItemsLib] Could not initialize database storage", e);
 		}
 
 		mTokenSpendStore = new TokenSpendStore(this);
@@ -210,14 +204,22 @@ public class Core extends JavaPlugin {
 	public void onDisable() {
 		disabling = true;
 		try {
-			getMessages().debug("Saving all rewardblocks to disk.");
-			mRewardBlockManager.saveData();
-			getMessages().debug("Saving worldgroups.");
-			mWorldGroupManager.save();
-			getMessages().debug("Shutdown StoreManager");
-			mDataStoreManager.shutdown();
-			getMessages().debug("Shutdown Store");
-			mStore.shutdown();
+			if (mRewardBlockManager != null) {
+				getMessages().debug("Saving all rewardblocks to disk.");
+				mRewardBlockManager.saveData();
+			}
+			if (mWorldGroupManager != null) {
+				getMessages().debug("Saving worldgroups.");
+				mWorldGroupManager.save();
+			}
+			if (mDataStoreManager != null) {
+				getMessages().debug("Shutdown StoreManager");
+				mDataStoreManager.shutdown();
+			}
+			if (mStore != null) {
+				getMessages().debug("Shutdown Store");
+				mStore.shutdown();
+			}
 		} catch (DataStoreException e) {
 			e.printStackTrace();
 		}

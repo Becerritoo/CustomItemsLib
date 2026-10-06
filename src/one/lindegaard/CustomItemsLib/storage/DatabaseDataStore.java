@@ -150,6 +150,7 @@ public abstract class DatabaseDataStore implements IDataStore {
 	@Override
 	public void shutdown() throws DataStoreException {
 		int n = 0;
+		DataStoreManager storeManager = Core.getDataStoreManager();
 		do {
 			try {
 				Thread.sleep(500);
@@ -157,7 +158,7 @@ public abstract class DatabaseDataStore implements IDataStore {
 				e.printStackTrace();
 			}
 			n++;
-		} while (Core.getDataStoreManager().isRunning() && n < 40);
+		} while (storeManager != null && storeManager.isRunning() && n < 40);
 		Bukkit.getConsoleSender().sendMessage(Core.PREFIX + " Closing database connection.");
 	}
 
