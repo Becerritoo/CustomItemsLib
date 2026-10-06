@@ -410,27 +410,74 @@ public abstract class DatabaseDataStore implements IDataStore {
 	 * @throws DataStoreException
 	 */
 	public void createRandomBountyPlayer() throws DataStoreException {
-		// added because BOUNTYOWNER_ID is null for Random bounties.
+		Connection connection = null;
+		String randomUuid = DataStoreManager.RANDOM_PLAYER_UUID;
 		try {
-			Connection mConnection = setupConnection();
-			Statement query = mConnection.createStatement();
-			ResultSet rs = query.executeQuery("SELECT PLAYER_ID from mh_PlayerSettings WHERE PLAYER_ID=0");
-			if (!rs.next()) {
-				Statement create = mConnection.createStatement();
+			connection = setupConnection();
+			Integer randomPlayerId = null;
+
+			try (PreparedStatement findRandom = connection
+					.prepareStatement("SELECT PLAYER_ID FROM mh_PlayerSettings WHERE UUID=?")) {
+				findRandom.setString(1, randomUuid);
+				try (ResultSet result = findRandom.executeQuery()) {
+					if (result.next())
+						randomPlayerId = result.getInt("PLAYER_ID");
+				}
+			}
+
+			if (randomPlayerId == null) {
+				try (PreparedStatement findReservedId = connection
+						.prepareStatement("SELECT UUID FROM mh_PlayerSettings WHERE PLAYER_ID=0");
+						ResultSet result = findReservedId.executeQuery()) {
+					if (result.next())
+						throw new SQLException("PLAYER_ID 0 is occupied by an unexpected UUID: " + result.getString("UUID"));
+				}
+
 				Bukkit.getConsoleSender()
 						.sendMessage(Core.PREFIX + " Adding RandomBounty Player to CustomItemsLibs Database.");
-				create.executeUpdate(
-						"insert into mh_PlayerSettings (UUID,PLAYER_ID,NAME,LAST_WORLDGRP,LEARNING_MODE,MUTE_MODE) values ('"
-								+ DataStoreManager.RANDOM_PLAYER_UUID + "',0,'RandomBounty','default',0,0)");
-				create.executeUpdate("update mh_PlayerSettings set Player_id=0 where name='RandomBounty'");
-				create.close();
-				mConnection.commit();
+				try (PreparedStatement create = connection.prepareStatement(
+						"INSERT INTO mh_PlayerSettings "
+								+ "(UUID,PLAYER_ID,NAME,LAST_WORLDGRP,LEARNING_MODE,MUTE_MODE) "
+								+ "VALUES (?,0,'RandomBounty','default',0,0)")) {
+					create.setString(1, randomUuid);
+					create.executeUpdate();
+				}
+			} else if (randomPlayerId != 0) {
+				try (PreparedStatement findReservedId = connection
+						.prepareStatement("SELECT UUID FROM mh_PlayerSettings WHERE PLAYER_ID=0");
+						ResultSet result = findReservedId.executeQuery()) {
+					if (result.next() && !randomUuid.equals(result.getString("UUID")))
+						throw new SQLException("PLAYER_ID 0 is occupied by an unexpected UUID: " + result.getString("UUID"));
+				}
+				Bukkit.getConsoleSender().sendMessage(Core.PREFIX_WARNING
+						+ "Repairing RandomBounty Player ID " + randomPlayerId + " to reserved ID 0.");
 			}
-			rs.close();
-			query.close();
-			mConnection.close();
+
+			try (PreparedStatement normalize = connection.prepareStatement(
+					"UPDATE mh_PlayerSettings SET PLAYER_ID=0, NAME='RandomBounty', LAST_WORLDGRP='default' WHERE UUID=?")) {
+				normalize.setString(1, randomUuid);
+				normalize.executeUpdate();
+			}
+
+			connection.commit();
 		} catch (SQLException e) {
+			if (connection != null) {
+				try {
+					connection.rollback();
+				} catch (SQLException rollbackError) {
+					e.addSuppressed(rollbackError);
+				}
+			}
 			throw new DataStoreException(e);
+		} finally {
+			if (connection != null) {
+				try {
+					connection.close();
+				} catch (SQLException closeError) {
+					if (Core.getConfigManager().debug)
+						closeError.printStackTrace();
+				}
+			}
 		}
 	}
 

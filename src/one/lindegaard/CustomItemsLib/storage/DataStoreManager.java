@@ -95,6 +95,8 @@ public class DataStoreManager {
 	public int getPlayerId(OfflinePlayer offlinePlayer) throws UserNotFoundException {
 		if (offlinePlayer == null)
 			return 0;
+		if (RANDOM_PLAYER_UUID.equals(offlinePlayer.getUniqueId().toString()))
+			return 0;
 
 		try {
 			int playerId = mStore.getPlayerId(offlinePlayer);
