@@ -1,3 +1,14 @@
+V1.2.0 (2026-10-06)
+* Begin semantic versioning for the fork maintained by Becerritoo.
+* Validate the release on Paper 1.21.11.
+* Separate CMILib action-bar and boss-bar support from the optional CMI hologram integration.
+* Add independent configuration switches for CMI and CMILib.
+* Fail cleanly when database initialization is incomplete and make shutdown null-safe.
+* Preserve and repair the reserved RandomBounty database identity safely.
+* Expand MySQL account names to VARCHAR(64) when an older schema is detected.
+* Include maintained fixes for reward tokens, hidden lore, ProtocolLib, Vault providers,
+  missing player records, reward pickup and modern Paper version detection.
+
 V1.0.9
 * Support for TitleManager removed because the Repository is broken and the plugin has not been updated for a long time.
 * Fixed NPE error Ticket 146 (https://github.com/Rocologo/BagOfGold/issues/146) 

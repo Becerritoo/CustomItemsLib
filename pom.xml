@@ -5,9 +5,9 @@
 	<artifactId>CustomItemsLib</artifactId>
 	<packaging>jar</packaging>
 	<!-- <version>1.0.9</version> -->
-	<version>1.1.0-JL.10</version>
-	<name>Rocologo's CustomItems Library</name>
-	<url>https://github.com/Rocologo/CustomItemsLib</url>
+	<version>1.2.0</version>
+	<name>CustomItemsLib</name>
+	<url>https://github.com/Becerritoo/CustomItemsLib</url>
 	<description>CustomItemsLib is a library with code shared between MobHunting and BagOfGold. </description>
 
 	<parent>
@@ -17,19 +17,20 @@
 	</parent>
 
 	<scm>
-		<connection>scm:svn:https://github.com/Rocologo/CustomItemsLib.git</connection>
-		<developerConnection>scm:git:git://github.com/Rocologo</developerConnection>
-		<url>https://github.com/Rocologo/CustomItemsLib</url>
+		<connection>scm:git:https://github.com/Becerritoo/CustomItemsLib.git</connection>
+		<developerConnection>scm:git:git@github.com:Becerritoo/CustomItemsLib.git</developerConnection>
+		<url>https://github.com/Becerritoo/CustomItemsLib</url>
 	</scm>
 
 	<properties>	
 			<!-- These 2 versions MUST ALWAYS be one lower than newest version to make the plugin compile -->
-			<bagofgold.version>4.5.6-JL.2</bagofgold.version>
+			<bagofgold.version>4.5.6</bagofgold.version>
 			<mobhunting.version>8.5.5-SNAPSHOT</mobhunting.version>
 	</properties>
 
 	<issueManagement>
-		<url>https://github.com/Rocologo/CustomItemsLib/issues</url>
+		<system>GitHub</system>
+		<url>https://github.com/Becerritoo/CustomItemsLib/issues</url>
 	</issueManagement>
 	
 	<!-- ********************************************************************** -->
