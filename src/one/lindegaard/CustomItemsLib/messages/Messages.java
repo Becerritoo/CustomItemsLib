@@ -33,7 +33,6 @@ import one.lindegaard.CustomItemsLib.Strings;
 import one.lindegaard.CustomItemsLib.compatibility.ActionAnnouncerCompat;
 import one.lindegaard.CustomItemsLib.compatibility.ActionBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.ActionbarCompat;
-import one.lindegaard.CustomItemsLib.compatibility.BagOfGoldCompat;
 import one.lindegaard.CustomItemsLib.compatibility.BarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.BossBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.CMILibCompat;
@@ -342,9 +341,7 @@ public class Messages {
 		if (isEmpty(message))
 			return;
 
-		final String final_message = BagOfGoldCompat.isSupported()
-				? PlaceholderAPICompat.setPlaceholders(player, message)
-				: "";
+		final String finalMessage = PlaceholderAPICompat.setPlaceholders(player, message);
 
 		if (  //TitleManagerCompat.isSupported() || 
 				ActionbarCompat.isSupported() || ActionAnnouncerCompat.isSupported()
@@ -367,14 +364,14 @@ public class Messages {
 
 				@Override
 				public void run() {
-					playerActionBarMessageNow(player, final_message);
+					playerActionBarMessageNow(player, finalMessage);
 				}
 			}, delay);
 		} else {
 			if (Servers.isMC115OrNewer())
-				player.sendTitle("", final_message);
-			else
-				player.sendMessage(final_message);
+					player.sendTitle("", finalMessage);
+				else
+					player.sendMessage(finalMessage);
 
 		}
 	}
