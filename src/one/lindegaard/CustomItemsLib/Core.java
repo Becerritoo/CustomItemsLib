@@ -27,6 +27,7 @@ import one.lindegaard.CustomItemsLib.compatibility.CMILibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.CompatPlugin;
 import one.lindegaard.CustomItemsLib.compatibility.CompatibilityManager;
 import one.lindegaard.CustomItemsLib.compatibility.MobHuntingCompat;
+import one.lindegaard.CustomItemsLib.compatibility.PlaceholderAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.ProtocolLibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.TitleAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.TitleManagerCompat;
@@ -175,6 +176,7 @@ public class Core extends JavaPlugin {
 		mCompatibilityManager = new CompatibilityManager(plugin);
 
 		mCompatibilityManager.registerPlugin(ProtocolLibCompat.class, CompatPlugin.ProtocolLib);
+		mCompatibilityManager.registerPlugin(PlaceholderAPICompat.class, CompatPlugin.PlaceholderAPI);
 
 		mCompatibilityManager.registerPlugin(TitleManagerCompat.class, CompatPlugin.TitleManager);
 		mCompatibilityManager.registerPlugin(TitleAPICompat.class, CompatPlugin.TitleAPI);

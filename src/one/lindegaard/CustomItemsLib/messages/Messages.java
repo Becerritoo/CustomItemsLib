@@ -28,7 +28,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import one.lindegaard.BagOfGold.compatibility.PlaceholderAPICompat;
 import one.lindegaard.CustomItemsLib.Core;
 import one.lindegaard.CustomItemsLib.Strings;
 import one.lindegaard.CustomItemsLib.compatibility.ActionAnnouncerCompat;
@@ -39,6 +38,7 @@ import one.lindegaard.CustomItemsLib.compatibility.BarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.BossBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.CMILibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.CitizensCompat;
+import one.lindegaard.CustomItemsLib.compatibility.PlaceholderAPICompat;
 //import one.lindegaard.CustomItemsLib.compatibility.TitleManagerCompat;
 import one.lindegaard.CustomItemsLib.server.Servers;
 

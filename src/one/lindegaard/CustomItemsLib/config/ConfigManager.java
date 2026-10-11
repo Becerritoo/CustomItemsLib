@@ -325,6 +325,10 @@ public class ConfigManager extends AutoConfig {
 			+ "\nhttps://www.spigotmc.org/resources/cmilib.87610/")
 	public boolean enableIntegrationCMILib = true;
 
+	@ConfigField(name = "enable_integration_placeholderapi", category = "plugins.placeholderapi", comment = "Enable/Disable placeholder processing with PlaceholderAPI."
+			+ "\nhttps://www.spigotmc.org/resources/placeholderapi.6245/")
+	public boolean enableIntegrationPlaceholderAPI = true;
+
 	@ConfigField(name = "enable_integration_protocollib", category = "plugins.protocollib", comment = "Enable/Disable integration with ProtocolLib."
 			+ "\nhttps://www.spigotmc.org/resources/protocollib.1997/")
 	public boolean enableIntegrationProtocolLib = true;
