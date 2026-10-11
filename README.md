@@ -12,6 +12,10 @@ The current release is `1.2.0`, validated on Paper 1.21.11. Releases follow
 [Semantic Versioning](https://semver.org/); the library version is independent from the
 Minecraft or Paper version.
 
+Version `1.3.0` is under development on `release/1.3.0`. It introduces optional
+Bukkit service contracts for consumer plugins and removes the build dependency
+from CustomItemsLib back to BagOfGold and MobHunting.
+
 CMI and CMILib are separate optional integrations. CMI provides its hologram API, while
 CMILib provides action-bar and boss-bar messages. Each integration has its own setting:
 
@@ -26,4 +30,5 @@ plugins:
 See [changelog.txt](changelog.txt) for the complete history and
 [the 1.2.0 release notes](releases/v1.2.0.md) for compatibility and validation details.
 The maintained responsibility boundaries and compatibility transition are described
-in [ARCHITECTURE.md](ARCHITECTURE.md).
+in [ARCHITECTURE.md](ARCHITECTURE.md). The current development test scope is recorded
+in [COMPATIBILITY.md](COMPATIBILITY.md).
