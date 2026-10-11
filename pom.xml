@@ -73,8 +73,15 @@
 					<artifactSet>
 						<includes>
 							<include>one.lindegaard:NMS*</include>
+							<include>org.inventivetalent.spiget-update:bukkit**</include>
 						</includes>
 					</artifactSet>
+					<relocations>
+						<relocation>
+							<pattern>org.inventivetalent.update</pattern>
+							<shadedPattern>one.lindegaard.CustomItemsLib.libs.spiget</shadedPattern>
+						</relocation>
+					</relocations>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -274,6 +281,14 @@
 			<artifactId>PlaceholderAPI</artifactId>
 			<version>${placeholderapi.version}</version>
 			<scope>provided</scope>
+		</dependency>
+
+		<!-- SpigetUpdate -->
+		<dependency>
+			<groupId>org.inventivetalent.spiget-update</groupId>
+			<artifactId>bukkit</artifactId>
+			<version>${spigetupdate.version}</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- BossBarAPI -->
