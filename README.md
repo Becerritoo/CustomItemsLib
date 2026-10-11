@@ -25,3 +25,5 @@ plugins:
 
 See [changelog.txt](changelog.txt) for the complete history and
 [the 1.2.0 release notes](releases/v1.2.0.md) for compatibility and validation details.
+The maintained responsibility boundaries and compatibility transition are described
+in [ARCHITECTURE.md](ARCHITECTURE.md).
