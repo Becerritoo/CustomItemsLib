@@ -17,7 +17,6 @@ import org.inventivetalent.update.spiget.UpdateCallback;
 import org.inventivetalent.update.spiget.comparator.VersionComparator;
 
 import one.lindegaard.CustomItemsLib.Core;
-import one.lindegaard.MobHunting.MobHunting;
 
 public class SpigetUpdater {
 
