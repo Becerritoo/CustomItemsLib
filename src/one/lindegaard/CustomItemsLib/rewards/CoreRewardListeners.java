@@ -41,12 +41,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 
-import one.lindegaard.BagOfGold.BagOfGold;
-import one.lindegaard.BagOfGold.PlayerBalance;
-import one.lindegaard.BagOfGold.compatibility.ShopkeepersCompat;
 import one.lindegaard.CustomItemsLib.Core;
 import one.lindegaard.CustomItemsLib.Tools;
-import one.lindegaard.CustomItemsLib.compatibility.BagOfGoldCompat;
+import one.lindegaard.CustomItemsLib.api.PhysicalCurrencyService;
+import one.lindegaard.CustomItemsLib.api.PhysicalCurrencyServices;
 import one.lindegaard.CustomItemsLib.server.Servers;
 
 public class CoreRewardListeners implements Listener {
@@ -55,6 +53,28 @@ public class CoreRewardListeners implements Listener {
 
 	public CoreRewardListeners(Plugin plugin) {
 		this.plugin = plugin;
+	}
+
+	private boolean hasPhysicalCurrencyService() {
+		return PhysicalCurrencyServices.isAvailable();
+	}
+
+	private void addToBalance(Player player, double amount) {
+		PhysicalCurrencyService service = PhysicalCurrencyServices.get();
+		if (service != null)
+			service.addToBalance(player, amount);
+	}
+
+	private void removeFromBalance(Player player, double amount) {
+		PhysicalCurrencyService service = PhysicalCurrencyServices.get();
+		if (service != null)
+			service.removeFromBalance(player, amount);
+	}
+
+	private void recordInventoryCredit(Player player, double amount) {
+		PhysicalCurrencyService service = PhysicalCurrencyServices.get();
+		if (service != null)
+			service.recordInventoryCredit(player, amount);
 	}
 
 	// **********************************************************************************************************
@@ -175,8 +195,8 @@ public class CoreRewardListeners implements Listener {
 						// when dropping from the quickbar using Q key
 						Core.getMessages().debug("%s dropped %s %s using Q key", player.getName(), money,
 								reward.getDisplayName());
-						if (BagOfGoldCompat.isSupported())
-							BagOfGold.getInstance().getRewardManager().removeMoneyFromPlayerBalance(player, money);
+						if (hasPhysicalCurrencyService())
+							removeFromBalance(player, money);
 					}
 				}
 				reward.setMoney(money);
@@ -215,8 +235,8 @@ public class CoreRewardListeners implements Listener {
 						ChatColor.stripColor(reward.toString()));
 				reward.setUniqueID(Core.getRewardBlockManager().getNextID());
 				Core.getRewardBlockManager().addReward(block, reward);
-				if (BagOfGoldCompat.isSupported() && reward.isMoney()) {
-					BagOfGold.getInstance().getRewardManager().removeMoneyFromPlayerBalance(player, reward.getMoney());
+				if (hasPhysicalCurrencyService() && reward.isMoney()) {
+					removeFromBalance(player, reward.getMoney());
 				}
 			} else {
 				Bukkit.getConsoleSender().sendMessage(Core.PREFIX_WARNING + player.getName()
@@ -333,15 +353,11 @@ public class CoreRewardListeners implements Listener {
 					Core.getCoreRewardManager().getDroppedMoney().remove(entity.getEntityId());
 					Reward reward = Reward.getReward(item);
 					if (reward.checkHash()) {
-						if (BagOfGoldCompat.isSupported() && reward.isMoney()) {
+						if (hasPhysicalCurrencyService() && reward.isMoney()) {
 							double addedMoney = Core.getCoreRewardManager().addBagOfGoldMoneyToPlayer(player,
 									reward.getMoney());
-							if (addedMoney > 0) {
-								PlayerBalance ps = BagOfGold.getInstance().getPlayerBalanceManager()
-										.getPlayerBalance(player);
-								ps.setBalance(Tools.round(ps.getBalance() + addedMoney));
-								BagOfGold.getInstance().getPlayerBalanceManager().setPlayerBalance(player, ps);
-							}
+							if (addedMoney > 0)
+								recordInventoryCredit(player, addedMoney);
 
 						}
 					} else {
@@ -548,14 +564,13 @@ public class CoreRewardListeners implements Listener {
 			}
 		}
 
-		List<SlotType> allowedSlots;
-		if (BagOfGoldCompat.isSupported() && ShopkeepersCompat.isSupported())
-			allowedSlots = Arrays.asList(SlotType.CONTAINER, SlotType.QUICKBAR, SlotType.OUTSIDE, SlotType.ARMOR,
-					SlotType.CRAFTING, SlotType.RESULT);
-		else
-			allowedSlots = Arrays.asList(SlotType.CONTAINER, SlotType.QUICKBAR, SlotType.OUTSIDE, SlotType.ARMOR);
+		List<SlotType> allowedSlots = Arrays.asList(SlotType.CONTAINER, SlotType.QUICKBAR, SlotType.OUTSIDE,
+				SlotType.ARMOR);
+		PhysicalCurrencyService currencyService = PhysicalCurrencyServices.get();
+		boolean isAllowedSlot = allowedSlots.contains(slotType)
+				|| currencyService != null && currencyService.isAdditionalRewardSlotAllowed(slotType);
 
-		if (allowedSlots.contains(slotType)) {
+		if (isAllowedSlot) {
 			if (isInventoryAllowed(clickedInventory)) {
 				switch (action) {
 				case NOTHING, UNKNOWN:
@@ -601,8 +616,8 @@ public class CoreRewardListeners implements Listener {
 							Core.getMessages().debug("COLLECT_TO_CURSOR: %s collected %s money to the cursor",
 									player.getName(), saldo);
 							if (clickedInventory.getType() == InventoryType.PLAYER) {
-								if (BagOfGoldCompat.isSupported() && cursor.isMoney())
-									BagOfGold.getInstance().getRewardManager().removeMoneyFromPlayerBalance(player,
+								if (hasPhysicalCurrencyService() && cursor.isMoney())
+									removeFromBalance(player,
 											saldo - money_in_hand);
 							}
 						} else if (cursor.isKilledHeadReward() || cursor.isKillerHeadReward()) {
@@ -620,8 +635,8 @@ public class CoreRewardListeners implements Listener {
 							Core.getMessages().debug(
 									"DROP_ALL_CURSOR, DROP_ONE_CURSOR: %s dropped %s BagOfGold outside the inventory",
 									player.getName(), reward.getMoney());
-							if (BagOfGoldCompat.isSupported() && reward.isMoney())
-								BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player,
+							if (hasPhysicalCurrencyService() && reward.isMoney())
+								addToBalance(player,
 										reward.getMoney());
 						}
 					}
@@ -634,15 +649,15 @@ public class CoreRewardListeners implements Listener {
 							Reward reward = Reward.getReward(isCursor);
 							Core.getMessages().debug("DROP_ALL_SLOT, DROP_ONE_SLOT: %s dropped %s BagOfGold from slot",
 									player.getName(), reward.getMoney());
-							if (BagOfGoldCompat.isSupported() && reward.isMoney())
-								BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player,
+							if (hasPhysicalCurrencyService() && reward.isMoney())
+								addToBalance(player,
 										reward.getMoney());
 						}
 					}
 					break;
 				case HOTBAR_SWAP, HOTBAR_MOVE_AND_READD:
 					// can be made by using key F or the keyboard and number keys
-					if (BagOfGoldCompat.isSupported() && (Reward.isReward(isCurrentSlot) || Reward.isReward(isCursor)
+					if (hasPhysicalCurrencyService() && (Reward.isReward(isCurrentSlot) || Reward.isReward(isCursor)
 							|| Reward.isReward(isNumberKey) || Reward.isReward(isSwapOffhand))) {
 						if (clickedInventory.getType() != InventoryType.PLAYER) {
 							Reward keyReward = Reward.isReward(isNumberKey) ? Reward.getReward(isNumberKey)
@@ -651,10 +666,10 @@ public class CoreRewardListeners implements Listener {
 									: new Reward();
 							if ((clickType == ClickType.NUMBER_KEY && Reward.isReward(isNumberKey))
 									|| (clickType == ClickType.SWAP_OFFHAND && Reward.isReward(isSwapOffhand))) {
-								BagOfGold.getInstance().getRewardManager().removeMoneyFromPlayerBalance(player,
+								removeFromBalance(player,
 										keyReward.getMoney() - swapHandReward.getMoney());
 							} else {
-								BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player,
+								addToBalance(player,
 										-keyReward.getMoney() + swapHandReward.getMoney());
 							}
 						}
@@ -662,7 +677,7 @@ public class CoreRewardListeners implements Listener {
 					break;
 				case MOVE_TO_OTHER_INVENTORY:
 					// Shift mouse click on the item to move item to another inventory
-					if (BagOfGoldCompat.isSupported()
+					if (hasPhysicalCurrencyService()
 							&& (Reward.isReward(isCurrentSlot) || Reward.isReward(isCursor))) {
 						Reward reward = Reward.isReward(isCurrentSlot) ? Reward.getReward(isCurrentSlot)
 								: Reward.getReward(isCursor);
@@ -692,14 +707,14 @@ public class CoreRewardListeners implements Listener {
 									Core.getMessages().debug(
 											"MOVE_TO_OTHER_INVENTORY: %s moved %s %s out of the Player Inventory",
 											player.getName(), reward.getMoney(), reward.getDisplayName());
-									BagOfGold.getInstance().getRewardManager().removeMoneyFromPlayerBalance(player,
+									removeFromBalance(player,
 											reward.getMoney());
 								}
 							} else { // CHEST, DISPENSER, DROPPER, ......
 								Core.getMessages().debug(
 										"MOVE_TO_OTHER_INVENTORY: %s moved %s %s into the Player Inventory",
 										player.getName(), reward.getMoney(), reward.getDisplayName());
-								BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player,
+								addToBalance(player,
 										reward.getMoney());
 							}
 						}
@@ -719,11 +734,11 @@ public class CoreRewardListeners implements Listener {
 							Core.getMessages().debug(
 									"PICKUP_ALL, PICKUP_ONE, PICKUP_SOME: %s moved BagOfGold (%s) out of Inventory",
 									player.getName(), reward.getMoney());
-							if (BagOfGoldCompat.isSupported() && reward.isMoney() && slotType != SlotType.ARMOR) {
+							if (hasPhysicalCurrencyService() && reward.isMoney() && slotType != SlotType.ARMOR) {
 								Core.getMessages().debug(
 										"PICKUP_ALL, PICKUP_ONE, PICKUP_SOME: Remove %s money from %s balance",
 										reward.getMoney(), player.getName());
-								BagOfGold.getInstance().getRewardManager().removeMoneyFromPlayerBalance(player,
+								removeFromBalance(player,
 										reward.getMoney());
 							}
 						}
@@ -754,11 +769,11 @@ public class CoreRewardListeners implements Listener {
 
 								if (clickedInventory.getType() == InventoryType.PLAYER
 										|| clickedInventory.getType() == InventoryType.CRAFTING) {
-									if (BagOfGoldCompat.isSupported() && reward.isMoney()
+									if (hasPhysicalCurrencyService() && reward.isMoney()
 											&& slotType != SlotType.ARMOR) {
 										Core.getMessages().debug("PICKUP_HALF: Remove %s money from %s balance",
 												reward.getMoney(), player.getName());
-										BagOfGold.getInstance().getRewardManager().removeMoneyFromPlayerBalance(player,
+										removeFromBalance(player,
 												reward.getMoney());
 									}
 								}
@@ -809,9 +824,9 @@ public class CoreRewardListeners implements Listener {
 									event.setCursor(isCursor);
 								}
 
-								if (BagOfGoldCompat.isSupported()
+								if (hasPhysicalCurrencyService()
 										&& clickedInventory.getType() == InventoryType.PLAYER) {
-									BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player, bagSize);
+									addToBalance(player, bagSize);
 								}
 								Core.getMessages().debug("PLACE_ONE: %s moved %s (%s) into Inventory:%s",
 										player.getName(), reward.getDisplayName(), bagSize, clickedInventory.getType());
@@ -932,9 +947,9 @@ public class CoreRewardListeners implements Listener {
 								
 							}
 					
-							if (BagOfGoldCompat.isSupported()
+							if (hasPhysicalCurrencyService()
 									&& clickedInventory.getType() == InventoryType.PLAYER) {
-								BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player,
+								addToBalance(player,
 										added_money);							
 							} 
 					
@@ -1027,9 +1042,9 @@ public class CoreRewardListeners implements Listener {
 								event.setCursor(isCurrentSlot);
 								Core.getMessages().debug("SWAP_WITH_CURSOR: %s merged two rewards(1)",
 										player.getName());
-								if (BagOfGoldCompat.isSupported()
+								if (hasPhysicalCurrencyService()
 										&& clickedInventory.getType() == InventoryType.PLAYER) {
-									BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player,
+									addToBalance(player,
 											added_money);
 								}
 							} else {
@@ -1047,9 +1062,9 @@ public class CoreRewardListeners implements Listener {
 								event.setCursor(isCurrentSlot);
 								Core.getMessages().debug("SWAP_WITH_CURSOR: %s merged two rewards(2)",
 										player.getName());
-								if (BagOfGoldCompat.isSupported()
+								if (hasPhysicalCurrencyService()
 										&& clickedInventory.getType() == InventoryType.PLAYER) {
-									BagOfGold.getInstance().getRewardManager().addMoneyToPlayerBalance(player,
+									addToBalance(player,
 											added_money);
 								}
 							}
