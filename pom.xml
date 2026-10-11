@@ -22,11 +22,6 @@
 		<url>https://github.com/Becerritoo/CustomItemsLib</url>
 	</scm>
 
-	<properties>	
-			<!-- This version MUST ALWAYS be one lower than newest version to make the plugin compile -->
-			<bagofgold.version>4.5.6</bagofgold.version>
-	</properties>
-
 	<issueManagement>
 		<system>GitHub</system>
 		<url>https://github.com/Becerritoo/CustomItemsLib/issues</url>
@@ -260,19 +255,6 @@
 			<groupId>one.lindegaard</groupId>
 			<artifactId>NMS_v1_8_R1</artifactId>
 			<version>${main.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>one.lindegaard</groupId>
-			<artifactId>BagOfGold</artifactId>
-			<version>${bagofgold.version}</version>
-			<scope>provided</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<!-- PlaceholderAPI -->
