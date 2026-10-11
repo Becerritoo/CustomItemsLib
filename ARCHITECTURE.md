@@ -20,6 +20,11 @@ Consumer-specific behavior is supplied through interfaces declared by
 CustomItemsLib and implementations registered with Bukkit's `ServicesManager`.
 CustomItemsLib must not import implementation classes from a consumer plugin.
 
+`PhysicalCurrencyService` is the first of these contracts. A currency plugin
+uses it to account for physical reward items as they move into or out of a
+player inventory. The service is optional and is looked up at the time of each
+operation so consumers can be enabled after CustomItemsLib.
+
 ## Consumer responsibilities
 
 BagOfGold owns physical-currency policy and accounting, including player
