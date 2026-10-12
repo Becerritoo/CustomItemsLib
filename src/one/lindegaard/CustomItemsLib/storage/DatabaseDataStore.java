@@ -382,7 +382,7 @@ public abstract class DatabaseDataStore implements IDataStore {
 									+ offlinePlayer.getName() + " UUID=" + offlinePlayer.getUniqueId().toString());
 							changedNames.add(offlinePlayer);
 						}
-					playerId = result.getInt(3);
+					playerId = result.getInt("PLAYER_ID");
 					result.close();
 
 				}

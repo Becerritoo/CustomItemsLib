@@ -4,6 +4,7 @@ V1.3.0 (development)
 * Remove CustomItemsLib build dependencies and class references to BagOfGold and MobHunting.
 * Keep the legacy Citizens adapter without registering the BagOfGold banker trait.
 * Own PlaceholderAPI message processing and updater runtime inside CustomItemsLib.
+* Read the shared player ID by column name so consumer statistics can be stored for new players.
 * Verify standalone, BagOfGold, MobHunting and combined startup on Paper 1.21.11.
 
 V1.2.0 (2026-10-06)
