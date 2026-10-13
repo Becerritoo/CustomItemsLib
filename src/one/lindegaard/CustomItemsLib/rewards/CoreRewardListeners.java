@@ -77,6 +77,38 @@ public class CoreRewardListeners implements Listener {
 			service.recordInventoryCredit(player, amount);
 	}
 
+	private void addToBalanceFromInventoryClick(Player player, double amount) {
+		PhysicalCurrencyService service = PhysicalCurrencyServices.get();
+		if (service != null && !service.supportsInventoryReconciliation())
+			service.addToBalance(player, amount);
+	}
+
+	private void removeFromBalanceFromInventoryClick(Player player, double amount) {
+		PhysicalCurrencyService service = PhysicalCurrencyServices.get();
+		if (service != null && !service.supportsInventoryReconciliation())
+			service.removeFromBalance(player, amount);
+	}
+
+	private void reconcileInventoryOnNextTick(Player player, InventoryAction action) {
+		PhysicalCurrencyService service = PhysicalCurrencyServices.get();
+		if (service == null || !service.supportsInventoryReconciliation())
+			return;
+		Bukkit.getScheduler().runTask(plugin, () -> {
+			PhysicalCurrencyService currentService = PhysicalCurrencyServices.get();
+			if (player.isOnline() && player.isValid() && currentService != null
+					&& currentService.supportsInventoryReconciliation())
+				currentService.reconcileInventory(player, "inventory-click-" + action.name().toLowerCase());
+		});
+	}
+
+	private boolean isBundleAction(InventoryAction action) {
+		return switch (action.name()) {
+		case "PICKUP_FROM_BUNDLE", "PICKUP_ALL_INTO_BUNDLE", "PICKUP_SOME_INTO_BUNDLE", "PLACE_FROM_BUNDLE",
+				"PLACE_ALL_INTO_BUNDLE", "PLACE_SOME_INTO_BUNDLE" -> true;
+		default -> false;
+		};
+	}
+
 	// **********************************************************************************************************
 	// Events
 	// **********************************************************************************************************
@@ -483,8 +515,12 @@ public class CoreRewardListeners implements Listener {
 		Inventory inventory = event.getInventory();
 		Inventory clickedInventory = Servers.isMC113OrNewer() ? event.getClickedInventory() : inventory;
 
-		if (!Reward.isReward(isCurrentSlot) && !Reward.isReward(isCursor) && !Reward.isReward(isNumberKey)
-				&& !Reward.isReward(isSwapOffhand))
+		boolean hasRewardInClick = Reward.isReward(isCurrentSlot) || Reward.isReward(isCursor)
+				|| Reward.isReward(isNumberKey) || Reward.isReward(isSwapOffhand);
+		if (!hasRewardInClick && !isBundleAction(action))
+			return;
+		reconcileInventoryOnNextTick(player, action);
+		if (!hasRewardInClick)
 			return;
 
 		if (Reward.isReward(isCurrentSlot)) {
@@ -617,7 +653,7 @@ public class CoreRewardListeners implements Listener {
 									player.getName(), saldo);
 							if (clickedInventory.getType() == InventoryType.PLAYER) {
 								if (hasPhysicalCurrencyService() && cursor.isMoney())
-									removeFromBalance(player,
+									removeFromBalanceFromInventoryClick(player,
 											saldo - money_in_hand);
 							}
 						} else if (cursor.isKilledHeadReward() || cursor.isKillerHeadReward()) {
@@ -636,7 +672,7 @@ public class CoreRewardListeners implements Listener {
 									"DROP_ALL_CURSOR, DROP_ONE_CURSOR: %s dropped %s BagOfGold outside the inventory",
 									player.getName(), reward.getMoney());
 							if (hasPhysicalCurrencyService() && reward.isMoney())
-								addToBalance(player,
+								addToBalanceFromInventoryClick(player,
 										reward.getMoney());
 						}
 					}
@@ -650,7 +686,7 @@ public class CoreRewardListeners implements Listener {
 							Core.getMessages().debug("DROP_ALL_SLOT, DROP_ONE_SLOT: %s dropped %s BagOfGold from slot",
 									player.getName(), reward.getMoney());
 							if (hasPhysicalCurrencyService() && reward.isMoney())
-								addToBalance(player,
+								addToBalanceFromInventoryClick(player,
 										reward.getMoney());
 						}
 					}
@@ -666,10 +702,10 @@ public class CoreRewardListeners implements Listener {
 									: new Reward();
 							if ((clickType == ClickType.NUMBER_KEY && Reward.isReward(isNumberKey))
 									|| (clickType == ClickType.SWAP_OFFHAND && Reward.isReward(isSwapOffhand))) {
-								removeFromBalance(player,
+								removeFromBalanceFromInventoryClick(player,
 										keyReward.getMoney() - swapHandReward.getMoney());
 							} else {
-								addToBalance(player,
+								addToBalanceFromInventoryClick(player,
 										-keyReward.getMoney() + swapHandReward.getMoney());
 							}
 						}
@@ -707,14 +743,14 @@ public class CoreRewardListeners implements Listener {
 									Core.getMessages().debug(
 											"MOVE_TO_OTHER_INVENTORY: %s moved %s %s out of the Player Inventory",
 											player.getName(), reward.getMoney(), reward.getDisplayName());
-									removeFromBalance(player,
+									removeFromBalanceFromInventoryClick(player,
 											reward.getMoney());
 								}
 							} else { // CHEST, DISPENSER, DROPPER, ......
 								Core.getMessages().debug(
 										"MOVE_TO_OTHER_INVENTORY: %s moved %s %s into the Player Inventory",
 										player.getName(), reward.getMoney(), reward.getDisplayName());
-								addToBalance(player,
+								addToBalanceFromInventoryClick(player,
 										reward.getMoney());
 							}
 						}
@@ -738,7 +774,7 @@ public class CoreRewardListeners implements Listener {
 								Core.getMessages().debug(
 										"PICKUP_ALL, PICKUP_ONE, PICKUP_SOME: Remove %s money from %s balance",
 										reward.getMoney(), player.getName());
-								removeFromBalance(player,
+								removeFromBalanceFromInventoryClick(player,
 										reward.getMoney());
 							}
 						}
@@ -773,7 +809,7 @@ public class CoreRewardListeners implements Listener {
 											&& slotType != SlotType.ARMOR) {
 										Core.getMessages().debug("PICKUP_HALF: Remove %s money from %s balance",
 												reward.getMoney(), player.getName());
-										removeFromBalance(player,
+										removeFromBalanceFromInventoryClick(player,
 												reward.getMoney());
 									}
 								}
@@ -826,7 +862,7 @@ public class CoreRewardListeners implements Listener {
 
 								if (hasPhysicalCurrencyService()
 										&& clickedInventory.getType() == InventoryType.PLAYER) {
-									addToBalance(player, bagSize);
+									addToBalanceFromInventoryClick(player, bagSize);
 								}
 								Core.getMessages().debug("PLACE_ONE: %s moved %s (%s) into Inventory:%s",
 										player.getName(), reward.getDisplayName(), bagSize, clickedInventory.getType());
@@ -949,7 +985,7 @@ public class CoreRewardListeners implements Listener {
 					
 							if (hasPhysicalCurrencyService()
 									&& clickedInventory.getType() == InventoryType.PLAYER) {
-								addToBalance(player,
+								addToBalanceFromInventoryClick(player,
 										added_money);							
 							} 
 					
@@ -1044,7 +1080,7 @@ public class CoreRewardListeners implements Listener {
 										player.getName());
 								if (hasPhysicalCurrencyService()
 										&& clickedInventory.getType() == InventoryType.PLAYER) {
-									addToBalance(player,
+									addToBalanceFromInventoryClick(player,
 											added_money);
 								}
 							} else {
@@ -1064,7 +1100,7 @@ public class CoreRewardListeners implements Listener {
 										player.getName());
 								if (hasPhysicalCurrencyService()
 										&& clickedInventory.getType() == InventoryType.PLAYER) {
-									addToBalance(player,
+									addToBalanceFromInventoryClick(player,
 											added_money);
 								}
 							}
@@ -1089,7 +1125,8 @@ public class CoreRewardListeners implements Listener {
 					}
 					break;
 				default:
-					Core.getMessages().debug("CoreRewardListeners: Unhandled action=%s", action);
+					if (!isBundleAction(action))
+						Core.getMessages().debug("CoreRewardListeners: Unhandled action=%s", action);
 				}
 
 			} else {
