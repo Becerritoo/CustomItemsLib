@@ -42,6 +42,28 @@ public interface PhysicalCurrencyService {
 	void recordInventoryCredit(Player player, double amount);
 
 	/**
+	 * Reports whether this provider can recalculate its balance from the player's
+	 * settled inventory state. Providers that opt in receive a reconciliation
+	 * request after reward-related inventory clicks instead of incremental balance
+	 * changes during the click.
+	 *
+	 * @return true when {@link #reconcileInventory(Player, String)} is implemented
+	 */
+	default boolean supportsInventoryReconciliation() {
+		return false;
+	}
+
+	/**
+	 * Recalculates the tracked balance from the player's current inventory and
+	 * cursor contents.
+	 *
+	 * @param player account owner
+	 * @param sourceHint short diagnostic source for the provider's audit log
+	 */
+	default void reconcileInventory(Player player, String sourceHint) {
+	}
+
+	/**
 	 * Allows a provider integration to opt into reward slots that CustomItemsLib
 	 * does not normally use, such as merchant result or crafting slots.
 	 *
