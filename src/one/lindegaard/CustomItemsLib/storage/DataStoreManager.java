@@ -4,6 +4,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -17,6 +20,9 @@ import one.lindegaard.CustomItemsLib.storage.async.StoreTask;
 
 public class DataStoreManager {
 
+	private static final long DRAIN_TIMEOUT_MILLIS = 20000;
+	private static final long THREAD_JOIN_TIMEOUT_MILLIS = 2000;
+
 	private Plugin plugin;
 
 	// Accessed on multiple threads
@@ -24,7 +30,7 @@ public class DataStoreManager {
 
 	// Accessed only from these threads
 	private IDataStore mStore;
-	private boolean mExit = false;
+	private volatile boolean mExit = false;
 
 	// Accessed only from store thread
 	private StoreThread mStoreThread;
@@ -46,9 +52,7 @@ public class DataStoreManager {
 	}
 
 	public boolean isRunning() {
-		return mTaskThread.getState() != Thread.State.WAITING && mTaskThread.getState() != Thread.State.TERMINATED
-				&& mStoreThread.getState() != Thread.State.WAITING
-				&& mStoreThread.getState() != Thread.State.TERMINATED;
+		return mTaskThread.isAlive() && mStoreThread.isAlive();
 	}
 
 	// *****************************************************************************
@@ -164,9 +168,22 @@ public class DataStoreManager {
 	 * Flush all waiting data to the database
 	 */
 	public void flush() {
-		if (mWaiting.size() != 0) {
-			Core.getMessages().debug("Force saving waiting %s data to database...", mWaiting.size());
-			mTaskThread.addTask(new StoreTask(mWaiting), null);
+		StoreTask storeTask;
+		int waitingSize;
+		synchronized (mWaiting) {
+			waitingSize = mWaiting.size();
+			if (waitingSize == 0)
+				return;
+			storeTask = new StoreTask(mWaiting);
+		}
+		Core.getMessages().debug("Force saving waiting %s data to database...", waitingSize);
+		if (!mTaskThread.addTask(storeTask, null)) {
+			plugin.getLogger().warning("Storage worker is unavailable; saving pending data on the current thread.");
+			try {
+				storeTask.run(mStore);
+			} catch (DataStoreException | RuntimeException e) {
+				plugin.getLogger().log(Level.SEVERE, "Unable to save pending data after storage worker failure.", e);
+			}
 		}
 	}
 
@@ -175,24 +192,31 @@ public class DataStoreManager {
 	 */
 	public void shutdown() {
 		mExit = true;
-		flush();
+		mStoreThread.interrupt();
+		joinThread(mStoreThread, "periodic storage");
 		mTaskThread.setWriteOnlyMode(true);
-		int n = 0;
+		flush();
 		try {
-			while (mTaskThread.getState() != Thread.State.WAITING && mTaskThread.getState() != Thread.State.TERMINATED
-					&& n < 40) {
-				Thread.sleep(500);
-				n++;
-			}
-			if (mTaskThread.getState() == Thread.State.RUNNABLE) {
-				mTaskThread.interrupt();
-			}
-			if (mTaskThread.getState() != Thread.State.WAITING) {
-				mTaskThread.waitForEmptyQueue();
-			}
-
+			if (!mTaskThread.waitForEmptyQueue(DRAIN_TIMEOUT_MILLIS))
+				plugin.getLogger().warning("Storage tasks did not finish before shutdown; continuing without waiting indefinitely.");
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
+			plugin.getLogger().warning("Interrupted while waiting for storage tasks during shutdown.");
+		} finally {
+			mTaskThread.interrupt();
+			joinThread(mTaskThread, "storage task");
+		}
+	}
+
+	private void joinThread(Thread thread, String description) {
+		try {
+			thread.join(THREAD_JOIN_TIMEOUT_MILLIS);
+			if (thread.isAlive())
+				plugin.getLogger().warning("The " + description + " thread did not stop within "
+						+ THREAD_JOIN_TIMEOUT_MILLIS + " ms.");
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			plugin.getLogger().warning("Interrupted while stopping the " + description + " thread.");
 		}
 	}
 
@@ -202,9 +226,11 @@ public class DataStoreManager {
 	public void waitForUpdates() {
 		flush();
 		try {
-			mTaskThread.waitForEmptyQueue();
+			if (!mTaskThread.waitForEmptyQueue(DRAIN_TIMEOUT_MILLIS))
+				plugin.getLogger().warning("Timed out while waiting for storage updates.");
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
+			plugin.getLogger().warning("Interrupted while waiting for storage updates.");
 		}
 	}
 
@@ -219,20 +245,15 @@ public class DataStoreManager {
 
 		public StoreThread(int interval) {
 			super("CIL StoreThread");
-			start();
 			mSaveInterval = interval;
+			start();
 		}
 
 		@Override
 		public void run() {
 
 			try {
-				while (true) {
-					synchronized (this) {
-						if (mExit && mWaiting.isEmpty()) {
-							break;
-						}
-					}
+				while (!mExit) {
 					mTaskThread.addTask(new StoreTask(mWaiting), null);
 
 					Thread.sleep(mSaveInterval * 50);
@@ -276,10 +297,11 @@ public class DataStoreManager {
 	}
 
 	private class TaskThread extends Thread {
-		private BlockingQueue<Task> mQueue;
-		private boolean mWritesOnly = false;
+		private final BlockingQueue<Task> mQueue;
+		private final AtomicInteger mOutstandingTasks = new AtomicInteger();
+		private volatile boolean mWritesOnly = false;
 
-		private Object mSignal = new Object();
+		private final Object mSignal = new Object();
 
 		public TaskThread() {
 			super("BGC TaskThread");
@@ -290,28 +312,62 @@ public class DataStoreManager {
 
 		}
 
-		public void waitForEmptyQueue() throws InterruptedException {
-			if (mQueue.isEmpty())
-				return;
-
+		public boolean waitForEmptyQueue(long timeoutMillis) throws InterruptedException {
+			long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
 			synchronized (mSignal) {
-				Core.getMessages().debug(
-						"waitForEmptyQueue: Waiting for %s+%s tasks to finish before closing connections.",
-						mQueue.size(), mWaiting.size());
-				while (!mQueue.isEmpty())
-					mSignal.wait();
+				if (mOutstandingTasks.get() > 0)
+					Core.getMessages().debug("Waiting for %s storage tasks to finish before closing connections.",
+							mOutstandingTasks.get());
+				while (mOutstandingTasks.get() > 0) {
+					if (!isAlive())
+						return false;
+					long remainingNanos = deadline - System.nanoTime();
+					if (remainingNanos <= 0)
+						return false;
+					long waitMillis = Math.min(500, Math.max(1, TimeUnit.NANOSECONDS.toMillis(remainingNanos)));
+					mSignal.wait(waitMillis);
+				}
 			}
+			return true;
 		}
 
 		public void setWriteOnlyMode(boolean writes) {
 			mWritesOnly = writes;
 		}
 
-		public <T> void addTask(IDataStoreTask<T> storeTask, IDataCallback<T> callback) {
+		public <T> boolean addTask(IDataStoreTask<T> storeTask, IDataCallback<T> callback) {
+			if (!isAlive()) {
+				plugin.getLogger().warning("Rejected storage task because the storage worker is not running.");
+				return false;
+			}
+			mOutstandingTasks.incrementAndGet();
 			try {
-				mQueue.put(new Task(storeTask, callback));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				mQueue.add(new Task(storeTask, callback));
+				return true;
+			} catch (RuntimeException e) {
+				completeTask();
+				throw e;
+			}
+		}
+
+		private void completeTask() {
+			int remaining = mOutstandingTasks.decrementAndGet();
+			if (remaining == 0)
+				synchronized (mSignal) {
+					mSignal.notifyAll();
+				}
+		}
+
+		private void handleTaskFailure(Task task, Throwable failure) {
+			plugin.getLogger().log(Level.SEVERE, "Storage task failed; the storage worker will continue.", failure);
+			if (task.callback != null && !mExit) {
+				try {
+					Bukkit.getScheduler().runTask(plugin,
+							new CallbackCaller((IDataCallback<Object>) task.callback, failure, false));
+				} catch (RuntimeException callbackFailure) {
+					plugin.getLogger().log(Level.SEVERE, "Unable to schedule the storage failure callback.",
+							callbackFailure);
+				}
 			}
 		}
 
@@ -319,39 +375,29 @@ public class DataStoreManager {
 		@Override
 		public void run() {
 			try {
-				while (true) {
-					if (mQueue.isEmpty())
-						synchronized (mSignal) {
-							mSignal.notifyAll();
-						}
-					// } else { //DONT ENABLE THIS CAUSES 100 CPU USAGE
-
+				while (!isInterrupted()) {
 					Task task = mQueue.take();
-
-					if (mWritesOnly && task.task.readOnly())
-						continue;
-
 					try {
-
+						if (mWritesOnly && task.task.readOnly())
+							continue;
 						Object result = task.task.run(mStore);
 
 						if (task.callback != null && !mExit)
 							Bukkit.getScheduler().runTask(plugin,
 									new CallbackCaller((IDataCallback<Object>) task.callback, result, true));
-
-					} catch (DataStoreException e) {
-						Core.getMessages().debug("DataStoreManager: TaskThread.run() failed!!!!!!!");
-						if (task.callback != null)
-							Bukkit.getScheduler().runTask(plugin,
-									new CallbackCaller((IDataCallback<Object>) task.callback, e, false));
-						else
-							e.printStackTrace();
+					} catch (DataStoreException | RuntimeException e) {
+						handleTaskFailure(task, e);
+					} finally {
+						completeTask();
 					}
-
 				}
-
 			} catch (InterruptedException e) {
-				Core.getMessages().debug(" TaskThread was interrupted");
+				Core.getMessages().debug("TaskThread was interrupted");
+				Thread.currentThread().interrupt();
+			} finally {
+				synchronized (mSignal) {
+					mSignal.notifyAll();
+				}
 			}
 		}
 	}
