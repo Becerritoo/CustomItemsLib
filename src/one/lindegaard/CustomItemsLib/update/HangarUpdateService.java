@@ -47,7 +47,6 @@ public abstract class HangarUpdateService {
 	private volatile UpdateStatus updateAvailable = UpdateStatus.UNKNOWN;
 	private volatile String currentJarFile = "";
 	private volatile String newDownloadVersion = "";
-	private volatile Release latestRelease;
 
 	protected HangarUpdateService(JavaPlugin plugin, String owner, String projectSlug) {
 		this.plugin = plugin;
@@ -128,7 +127,6 @@ public abstract class HangarUpdateService {
 		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 			try {
 				Release release = fetchLatestCompatibleRelease();
-				latestRelease = release;
 				if (release == null || isUpdateNewerVersion(release.version) != UpdateStatus.AVAILABLE) {
 					updateAvailable = UpdateStatus.NOT_AVAILABLE;
 					runSync(() -> {
@@ -184,6 +182,8 @@ public abstract class HangarUpdateService {
 				.header("Accept", "application/json")
 				.header("User-Agent", projectSlug + "/" + plugin.getDescription().getVersion()).GET().build();
 		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		if (response.statusCode() == 404)
+			return null;
 		if (response.statusCode() != 200)
 			throw new IOException("Hangar returned HTTP " + response.statusCode());
 
