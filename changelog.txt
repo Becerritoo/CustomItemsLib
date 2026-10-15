@@ -8,6 +8,7 @@ V1.3.0 (development)
 * Verify standalone, BagOfGold, MobHunting and combined startup on Paper 1.21.11.
 * Stop probing consumer plugins during the CustomItemsLib startup path.
 * Run historical consumer-file imports once and record their outcome without removing source files.
+* Finish startup without Vault, Reserve or a physical-currency consumer and keep library commands available.
 
 V1.2.0 (2026-10-06)
 * Begin semantic versioning for the fork maintained by Becerritoo.

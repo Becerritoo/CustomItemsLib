@@ -14,6 +14,7 @@ import one.lindegaard.CustomItemsLib.commands.DebugCommand;
 import one.lindegaard.CustomItemsLib.commands.ReloadCommand;
 import one.lindegaard.CustomItemsLib.commands.UpdateCommand;
 import one.lindegaard.CustomItemsLib.commands.VersionCommand;
+import one.lindegaard.CustomItemsLib.api.PhysicalCurrencyServices;
 import one.lindegaard.CustomItemsLib.compatibility.ActionAnnouncerCompat;
 import one.lindegaard.CustomItemsLib.compatibility.ActionBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.ActionbarCompat;
@@ -169,13 +170,17 @@ public class Core extends JavaPlugin {
 		// Hook into Vault or Reserve
 		mEconomyManager = new EconomyManager(this);
 		Bukkit.getPluginManager().registerEvents(new EconomyProviderListener(), this);
-		if (!mEconomyManager.isActive())
-			return;
 		
 		// Check for new updates
 		mSpigetUpdater = new SpigetUpdater(this);
 		mSpigetUpdater.setCurrentJarFile(this.getFile().getName());
 		mSpigetUpdater.hourlyUpdateCheck(getServer().getConsoleSender(), mConfig.updateCheck, false);
+
+		Bukkit.getScheduler().runTask(this, () -> {
+			if (!PhysicalCurrencyServices.isAvailable())
+				Bukkit.getConsoleSender().sendMessage(PREFIX
+						+ "No physical currency service is registered; running in library-only mode.");
+		});
 
 	}
 
