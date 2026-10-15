@@ -36,7 +36,7 @@ core.commands.update.description=Mets à jour le plugin
 core.commands.update.help=Merci de taper '/cil update' pour lancer la mise à jour.
 core.commands.update.no-update=Pas de mise à jour trouvée.
 core.commands.update.version-found=Nouvelle version disponible : ${newversion}
-core.commands.version.currentversion=Ce serveur tourne avec 'BagOfGold ${currentversion}'.
+core.commands.version.currentversion=Ce serveur tourne avec 'CustomItemsLib ${currentversion}'.
 core.commands.version.description=Affiche le numéro de version de core.
 core.commands.version.newversion=Version ${newversion} disponible. Utilises '/cil update' pour mettre à jour le plugin.
 

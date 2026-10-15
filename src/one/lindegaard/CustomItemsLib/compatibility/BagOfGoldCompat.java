@@ -5,6 +5,14 @@ import org.bukkit.plugin.Plugin;
 
 import one.lindegaard.CustomItemsLib.Core;
 
+/**
+ * Legacy compatibility probe retained for binary compatibility with older
+ * consumers. CustomItemsLib no longer registers or uses this probe itself.
+ *
+ * @deprecated consumers should use the public services exposed by
+ *             CustomItemsLib instead of asking the library to detect them.
+ */
+@Deprecated
 public class BagOfGoldCompat {
 
 	private static Plugin mPlugin;

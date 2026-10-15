@@ -1,11 +1,10 @@
 name: CustomItemsLib
 main: one.lindegaard.CustomItemsLib.Core
 version: ${version}
-description: CustomItemsLib is shared library used by BagOfGold and MobHunting.  
+description: Shared infrastructure for signed reward items and consumer plugins.
 dev-url: https://www.spigotmc.org/resources/customitemslib.nnnnn/
 authors: [Rocologo, Becerritoo]
 depend: []
-loadbefore: [BagOfGold, MobHunting]
 softdepend: [Reserve, Vault, PerWorldInventory, Citizens, Essentials, ProtocolLib, PlaceholderAPI, PacketListenerApi, ItemFrameShops, Multiverse-Core, TitleManager, CMI, CMILib, BossBarAPI, BarAPI, ActionBar, TitleAPI, TitleManager, ActionBarAPI, ActionAnnouncer]
 api-version: 1.21
 

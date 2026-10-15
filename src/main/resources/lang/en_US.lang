@@ -36,8 +36,8 @@ core.commands.update.no-update=No update found.
 core.commands.update.check=Checking for new updates...
 core.commands.update.version-found=new version available: ${newversion}
 core.commands.update.help=Please type '/cil update' to update. 
-core.commands.version.description=Show BagOfGold's version number.
-core.commands.version.currentversion=This server is running 'BagOfGold ${currentversion}'.
+core.commands.version.description=Show CustomItemsLib's version number.
+core.commands.version.currentversion=This server is running 'CustomItemsLib ${currentversion}'.
 core.commands.version.newversion=Version ${newversion} is available. Use '/cil' to update the plugin.
 
 mobs.Armorer.name=§9Armorer

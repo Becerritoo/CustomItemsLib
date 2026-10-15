@@ -93,7 +93,7 @@ public class MySQLDataStore extends DatabaseDataStore {
 		// http://stackoverflow.com/questions/6115612/how-to-convert-an-entire-mysql-database-characterset-and-collation-to-utf-8
 
 		ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
-		console.sendMessage(ChatColor.GREEN + "[BagOfGold] Converting BagOfGold Database to UTF8");
+		console.sendMessage(ChatColor.GREEN + "[CustomItemsLib] Converting database to UTF8");
 
 		Connection connection = setupConnection();
 
@@ -105,11 +105,11 @@ public class MySQLDataStore extends DatabaseDataStore {
 			create.executeUpdate("ALTER TABLE mh_Balance CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
 			create.executeUpdate(
 					"ALTER TABLE mh_PlayerSettings CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-			console.sendMessage(ChatColor.GREEN + "[BagOfGold] Done.");
+			console.sendMessage(ChatColor.GREEN + "[CustomItemsLib] Done.");
 
 		} catch (SQLException e) {
 			console.sendMessage(
-					ChatColor.RED + "[BagOfGold] Something went wrong when converting database tables to UTF8MB4.");
+					ChatColor.RED + "[CustomItemsLib] Something went wrong when converting database tables to UTF8MB4.");
 			e.printStackTrace();
 		}
 

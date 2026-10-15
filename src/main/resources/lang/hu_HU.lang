@@ -37,8 +37,8 @@ core.commands.update.no-update=Nincs frissítés.
 core.commands.update.check=Új frissítések ellenőrzése...
 core.commands.update.version-found=Új verzió elérhető: ${newversion}
 core.commands.update.help=Kérjük, írd be a '/cil update' a frissítéshez. 
-core.commands.version.description=A BagOfGold verziószámának megjelenítése.
-core.commands.version.currentversion=Ez a kiszolgáló fut 'BagOfGold ${currentversion}'.
+core.commands.version.description=A CustomItemsLib verziószámának megjelenítése.
+core.commands.version.currentversion=Ez a kiszolgáló fut 'CustomItemsLib ${currentversion}'.
 core.commands.version.newversion=Verzió ${newversion} elérhető. Használd a '/cil update' a plugin frissítéséhez.
 
 mobs.Armorer.name=§9Fegyverkovács

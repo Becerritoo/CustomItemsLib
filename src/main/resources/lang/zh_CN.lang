@@ -38,8 +38,8 @@ core.commands.update.description=更新插件
 core.commands.update.help=请输入 '/cil update' 来更新.
 core.commands.update.no-update=没有更新的发现.
 core.commands.update.version-found=新的版本: ${newversion}
-core.commands.version.currentversion=此服务器正在运行 'BagOfGold ${currentversion}'.
-core.commands.version.description=显示 BagOfGold插件 的版本号.
+core.commands.version.currentversion=此服务器正在运行 'CustomItemsLib ${currentversion}'.
+core.commands.version.description=显示 CustomItemsLib 插件的版本号.
 core.commands.version.newversion= ${newversion} 版本是可用的 输入 '/cil update' 来更新插件
 
 mobs.Armorer.name=§9Armorer

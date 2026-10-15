@@ -61,7 +61,7 @@ public class VersionCommand implements ICommand {
 			Core.getMessages().senderSendMessage(sender,
 					ChatColor.GREEN + Core.getMessages().getString("core.commands.version.newversion",
 							"newversion", plugin.getSpigetUpdater().getNewDownloadVersion()));
-		else if (sender.hasPermission("bagofgold.update"))
+		else if (sender.hasPermission("customitemslib.update"))
 			plugin.getSpigetUpdater().checkForUpdate(sender, true, false);
 		return true;
 	}

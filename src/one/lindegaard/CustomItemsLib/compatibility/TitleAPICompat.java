@@ -1,7 +1,6 @@
 package one.lindegaard.CustomItemsLib.compatibility;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import com.connorlinfoot.titleapi.TitleAPI;
@@ -15,12 +14,12 @@ public class TitleAPICompat {
 
 	public TitleAPICompat() {
 		if (!isEnabledInConfig()) {
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GOLD + "[BagOfGold] " + ChatColor.RESET
+			Bukkit.getConsoleSender().sendMessage(Core.PREFIX
 					+ "Compatibility with TitelAPI is disabled in config.yml");
 		} else {
 			mPlugin = Bukkit.getPluginManager().getPlugin(CompatPlugin.TitleAPI.getName());
 
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GOLD + "[BagOfGold] " + ChatColor.RESET
+			Bukkit.getConsoleSender().sendMessage(Core.PREFIX
 					+ "Enabling compatibility with TitleAPI (" + getTitleAPI().getDescription().getVersion() + ")");
 			supported = true;
 		}

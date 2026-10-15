@@ -19,14 +19,12 @@ import one.lindegaard.CustomItemsLib.commands.VersionCommand;
 import one.lindegaard.CustomItemsLib.compatibility.ActionAnnouncerCompat;
 import one.lindegaard.CustomItemsLib.compatibility.ActionBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.ActionbarCompat;
-import one.lindegaard.CustomItemsLib.compatibility.BagOfGoldCompat;
 import one.lindegaard.CustomItemsLib.compatibility.BarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.BossBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.CMICompat;
 import one.lindegaard.CustomItemsLib.compatibility.CMILibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.CompatPlugin;
 import one.lindegaard.CustomItemsLib.compatibility.CompatibilityManager;
-import one.lindegaard.CustomItemsLib.compatibility.MobHuntingCompat;
 import one.lindegaard.CustomItemsLib.compatibility.PlaceholderAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.ProtocolLibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.TitleAPICompat;
@@ -187,9 +185,6 @@ public class Core extends JavaPlugin {
 		mCompatibilityManager.registerPlugin(BarAPICompat.class, CompatPlugin.BarApi);
 		mCompatibilityManager.registerPlugin(CMICompat.class, CompatPlugin.CMI);
 		mCompatibilityManager.registerPlugin(CMILibCompat.class, CompatPlugin.CMILib);
-
-		mCompatibilityManager.registerPlugin(BagOfGoldCompat.class, CompatPlugin.BagOfGold);
-		mCompatibilityManager.registerPlugin(MobHuntingCompat.class, CompatPlugin.MobHunting);
 
 		// Hook into Vault or Reserve
 		mEconomyManager = new EconomyManager(this);

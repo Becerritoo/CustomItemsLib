@@ -38,7 +38,7 @@ public class UpdateCommand implements ICommand {
 
 	@Override
 	public String getDescription() {
-		return Core.getMessages().getString("bagofgold.commands.update.description");
+		return Core.getMessages().getString("core.commands.update.description");
 	}
 
 	@Override

@@ -122,7 +122,7 @@ public class WorldGroupManager {
 		worldGroups.get(getDefaultWorldgroup()).add(world);
 		save();
 		Bukkit.getConsoleSender().sendMessage(Core.PREFIX_WARNING + "The world '" + world
-				+ "' was missing in the worldgroups.yml file. It has beed added to the default group in worldgroups.yml in the BagOfGold folder. Please review the worldgroups.");
+				+ "' was missing in worldgroups.yml. It has been added to the default group in the CustomItemsLib folder. Please review the world groups.");
 		return getDefaultWorldgroup();
 	}
 
@@ -168,7 +168,7 @@ public class WorldGroupManager {
 							+ "\ntheir economy balance and bank-balance. If you use"
 							+ "\nMyPet, PerWorldInventory or similar, the world " //
 							+ "\nshould be the grouped the same way here." + "\n"
-							+ "\nBounties in MobHunting is shared the same way." + "\n");
+							+ "\nConsumer plugins use these groups for their shared per-world data." + "\n");
 			// plugin.getMessages().debug("Saving worldGroups");
 
 			Set<String> groups = worldGroups.keySet();

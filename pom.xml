@@ -8,7 +8,7 @@
 	<version>1.3.0-SNAPSHOT</version>
 	<name>CustomItemsLib</name>
 	<url>https://github.com/Becerritoo/CustomItemsLib</url>
-	<description>CustomItemsLib is a library with code shared between MobHunting and BagOfGold. </description>
+	<description>Shared infrastructure for signed reward items and consumer plugins.</description>
 
 	<parent>
 		<groupId>one.lindegaard</groupId>

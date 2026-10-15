@@ -14,8 +14,8 @@ public class ConfigManager extends AutoConfig {
 		setCategoryComment("Introduction", "########################################################################"
 				+ "\n########################################################################");
 
-		setCategoryComment("general", "This file contains settings which is shared between BagOfGold and MobHunting, "
-				+ "\nthis means if you change settings in this file it will affect both plugins."
+		setCategoryComment("general", "This file contains settings shared by CustomItemsLib consumer plugins."
+				+ "\nChanging a shared setting can affect every connected consumer."
 				+ "\n\n\n########################################################################"
 				+ "\ngeneral Settings" + "\n########################################################################");
 
@@ -156,7 +156,7 @@ public class ConfigManager extends AutoConfig {
 	// eConomy settings
 	// #####################################################################################
 
-	@ConfigField(name = "number_format", category = "economy", comment = "Here you can change the way the numbers is formatted when you use BagOfGold as an EconomyPlugin.")
+	@ConfigField(name = "number_format", category = "economy", comment = "Number format used for monetary reward values.")
 	public String numberFormat = "#.#####";
 
 	@ConfigField(name = "reward_rounding", category = "economy", comment = "Rounding of rewards when you uses a range or %. (ex creeperPrize=10:30) the reward."
@@ -278,7 +278,7 @@ public class ConfigManager extends AutoConfig {
 	}
 
 	@ConfigField(name = "deny_hoppers_to_pickup_rewards", category = "reward.other", comment = "Dark room mobspawners usually collect items in a HOPPER. This is allowed by default."
-			+ "\nIf you want to deny HOPPERS to collect MobHunting Money rewards "
+			+ "\nIf you want to deny HOPPERS from collecting reward items, "
 			+ "\nset \"deny_hoppers_to_pickup_rewards\"=true")
 	public boolean denyHoppersToPickUpRewards = false;
 	

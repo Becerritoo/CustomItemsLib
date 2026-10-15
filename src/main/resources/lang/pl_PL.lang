@@ -35,7 +35,7 @@ core.commands.update.description=Aktualizuje Plugin
 core.commands.update.help=Wpisz '/cil update' aby zaktualizowac.
 core.commands.update.no-update=Nie znaleziono nowszej wersji.
 core.commands.update.version-found=Dostepna nowa wersja: ${newversion}
-core.commands.version.currentversion=Ten serwer ma 'MobHunting ${currentversion}'.
+core.commands.version.currentversion=Ten serwer ma 'CustomItemsLib ${currentversion}'.
 core.commands.version.description=Pokazuje wersje pluginu.
 core.commands.version.newversion=Wersja ${newversion} jest dostepna. Uzyj '/cil update' aby zaktualizowac.
 
