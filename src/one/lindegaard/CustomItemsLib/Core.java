@@ -33,7 +33,7 @@ import one.lindegaard.CustomItemsLib.storage.DataStoreManager;
 import one.lindegaard.CustomItemsLib.storage.IDataStore;
 import one.lindegaard.CustomItemsLib.storage.MySQLDataStore;
 import one.lindegaard.CustomItemsLib.storage.SQLiteDataStore;
-import one.lindegaard.CustomItemsLib.update.SpigetUpdater;
+import one.lindegaard.CustomItemsLib.update.HangarUpdater;
 
 public class Core extends JavaPlugin {
 
@@ -54,7 +54,7 @@ public class Core extends JavaPlugin {
 	private static CompatibilityManager mCompatibilityManager;
 	private static LegacyDataMigrator mLegacyDataMigrator;
 	private CommandDispatcher mCommandDispatcher;
-	private SpigetUpdater mSpigetUpdater;
+	private HangarUpdater mHangarUpdater;
 
 	// Public Placeholders used in BagOfGold and MobHunting
 	public static final String PH_PLAYERNAME = "playername";
@@ -158,9 +158,9 @@ public class Core extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new EconomyProviderListener(), this);
 		
 		// Check for new updates
-		mSpigetUpdater = new SpigetUpdater(this);
-		mSpigetUpdater.setCurrentJarFile(this.getFile().getName());
-		mSpigetUpdater.hourlyUpdateCheck(getServer().getConsoleSender(), mConfig.updateCheck, false);
+		mHangarUpdater = new HangarUpdater(this);
+		mHangarUpdater.setCurrentJarFile(this.getFile().getName());
+		mHangarUpdater.hourlyUpdateCheck(getServer().getConsoleSender(), mConfig.updateCheck, false);
 
 		Bukkit.getScheduler().runTask(this, () -> {
 			if (!PhysicalCurrencyServices.isAvailable())
@@ -243,8 +243,8 @@ public class Core extends JavaPlugin {
 		return mLegacyDataMigrator;
 	}
 
-	public SpigetUpdater getSpigetUpdater() {
-		return mSpigetUpdater;
+	public HangarUpdater getHangarUpdater() {
+		return mHangarUpdater;
 	}
 
 	public static EconomyManager getEconomyManager() {

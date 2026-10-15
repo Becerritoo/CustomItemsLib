@@ -57,12 +57,12 @@ public class VersionCommand implements ICommand {
 		Core.getMessages().senderSendMessage(sender,
 				ChatColor.GREEN + Core.getMessages().getString("core.commands.version.currentversion",
 						"currentversion", Core.getInstance().getDescription().getVersion()));
-		if (plugin.getSpigetUpdater().getUpdateAvailable() == UpdateStatus.AVAILABLE)
+		if (plugin.getHangarUpdater().getUpdateAvailable() == UpdateStatus.AVAILABLE)
 			Core.getMessages().senderSendMessage(sender,
 					ChatColor.GREEN + Core.getMessages().getString("core.commands.version.newversion",
-							"newversion", plugin.getSpigetUpdater().getNewDownloadVersion()));
+							"newversion", plugin.getHangarUpdater().getNewDownloadVersion()));
 		else if (sender.hasPermission("customitemslib.update"))
-			plugin.getSpigetUpdater().checkForUpdate(sender, true, false);
+			plugin.getHangarUpdater().checkForUpdate(sender, true, false);
 		return true;
 	}
 

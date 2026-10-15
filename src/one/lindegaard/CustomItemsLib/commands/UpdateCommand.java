@@ -53,13 +53,13 @@ public class UpdateCommand implements ICommand {
 
 	@Override
 	public boolean onCommand(CommandSender sender, String label, String[] args) {
-		if (plugin.getSpigetUpdater().getUpdateAvailable() == UpdateStatus.AVAILABLE)
-			plugin.getSpigetUpdater().checkForUpdate(sender, false, true);
-		else if (plugin.getSpigetUpdater().getUpdateAvailable() == UpdateStatus.RESTART_NEEDED)
+		if (plugin.getHangarUpdater().getUpdateAvailable() == UpdateStatus.AVAILABLE)
+			plugin.getHangarUpdater().checkForUpdate(sender, false, true);
+		else if (plugin.getHangarUpdater().getUpdateAvailable() == UpdateStatus.RESTART_NEEDED)
 			Core.getMessages().senderSendMessage(sender,
 					ChatColor.GREEN + Core.getMessages().getString("core.commands.update.complete"));
 		else
-			plugin.getSpigetUpdater().checkForUpdate(sender, false, true);
+			plugin.getHangarUpdater().checkForUpdate(sender, false, true);
 		return true;
 	}
 
