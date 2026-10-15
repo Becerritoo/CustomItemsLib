@@ -18,8 +18,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import com.google.common.io.Files;
-
 /**
  * @author Rocologo
  *
@@ -36,6 +34,7 @@ public class WorldGroupManager {
 	public WorldGroupManager(Plugin plugin) {
 		this.plugin = plugin;
 		file = new File(plugin.getDataFolder(), "../CustomItemsLib/worldgroups.yml");
+		Core.getLegacyDataMigrator().migrateWorldGroups(file);
 		load();
 		if (worldGroups.isEmpty()) {
 			// TODO: check if worldgroups is the same as PerWorldInventory and MyPet if
@@ -185,42 +184,12 @@ public class WorldGroupManager {
 	}
 
 	public void load() {
-		if (!file.exists()) {
-			File fileBagOfGold = new File(plugin.getDataFolder(), "../BagOfGold/worldgroups.yml");
-			if (!fileBagOfGold.exists()) {
-				File fileMobHunting = new File(plugin.getDataFolder(), "../MobHunting/worldgroups.yml");
-				if (!fileMobHunting.exists()) {
-					return;
-				} else {
-					// plugin.getMessages().debug("Copy WorldGroups from MobHunting.");
-					try {
-						config.load(fileMobHunting);
-						config.save(file);
-						File fileMobHuntingOld = new File(plugin.getDataFolder(), "../MobHunting/worldgroups.yml.old");
-						Files.move(fileMobHunting, fileMobHuntingOld);
-					} catch (IllegalStateException | InvalidConfigurationException | IOException e) {
-						e.printStackTrace();
-					}
-				}
-			} else {
-				// plugin.getMessages().debug("Copy WorldGroups from BagOfGold");
-
-				try {
-					config.load(fileBagOfGold);
-					config.save(file);
-					File fileBagOfGoldOld = new File(plugin.getDataFolder(), "../BagOfGold/worldgroups.yml.old");
-					Files.move(fileBagOfGold, fileBagOfGoldOld);
-				} catch (IllegalStateException | InvalidConfigurationException | IOException e) {
-					e.printStackTrace();
-				}
-			}
-		} else {
+		if (file.exists()) {
 			try {
 				config.load(file);
 			} catch (IllegalStateException | InvalidConfigurationException | IOException e) {
 				e.printStackTrace();
 			}
-
 		}
 
 		if (config.contains("groups")) {

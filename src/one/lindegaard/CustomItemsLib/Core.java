@@ -9,8 +9,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.google.common.io.Files;
-
 import one.lindegaard.CustomItemsLib.commands.CommandDispatcher;
 import one.lindegaard.CustomItemsLib.commands.DebugCommand;
 import one.lindegaard.CustomItemsLib.commands.ReloadCommand;
@@ -31,6 +29,7 @@ import one.lindegaard.CustomItemsLib.compatibility.TitleAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.TitleManagerCompat;
 import one.lindegaard.CustomItemsLib.config.ConfigManager;
 import one.lindegaard.CustomItemsLib.messages.Messages;
+import one.lindegaard.CustomItemsLib.migration.LegacyDataMigrator;
 import one.lindegaard.CustomItemsLib.rewards.CoreRewardManager;
 import one.lindegaard.CustomItemsLib.rewards.RewardSecurity;
 import one.lindegaard.CustomItemsLib.rewards.RewardBlockManager;
@@ -59,6 +58,7 @@ public class Core extends JavaPlugin {
 	private static RewardSecurity mRewardSecurity;
 	private static TokenSpendStore mTokenSpendStore;
 	private static CompatibilityManager mCompatibilityManager;
+	private static LegacyDataMigrator mLegacyDataMigrator;
 	private CommandDispatcher mCommandDispatcher;
 	private SpigetUpdater mSpigetUpdater;
 
@@ -85,29 +85,9 @@ public class Core extends JavaPlugin {
 
 		disabling = false;
 		plugin = this;
-
-		if (!mFile.exists()) {
-			mFile.mkdir();
-			// Copy config and database from old place
-			File mFileOldConfig = new File(getDataFolder() , "../BagOfGold/bagofgoldcore.yml");
-			File mFileOldDb = new File(getDataFolder(), "../BagOfGold/bagofgoldcore.db");
-			File mFileNewDb = new File(getDataFolder(), "bagofgoldcore.db");
-			if (mFileOldConfig.exists()) {
-				try {
-					Files.move(mFileOldConfig, mFile);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (mFileOldDb.exists()) {
-				try {
-					Files.move(mFileOldDb, mFileNewDb);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-
-		}
+		getDataFolder().mkdirs();
+		mLegacyDataMigrator = new LegacyDataMigrator(this);
+		mLegacyDataMigrator.migrateCoreFiles();
 
 		int config_version = ConfigManager.getConfigVersion(mFile);
 
@@ -266,6 +246,10 @@ public class Core extends JavaPlugin {
 
 	public static TokenSpendStore getTokenSpendStore() {
 		return mTokenSpendStore;
+	}
+
+	public static LegacyDataMigrator getLegacyDataMigrator() {
+		return mLegacyDataMigrator;
 	}
 
 	public SpigetUpdater getSpigetUpdater() {

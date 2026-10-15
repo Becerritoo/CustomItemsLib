@@ -39,6 +39,7 @@ public class RewardBlockManager {
 		this.plugin = plugin;
 		file = new File(plugin.getDataFolder().getParent(), "CustomItemsLib/rewards.yml");
 		load();
+		Core.getLegacyDataMigrator().migrateRewardFiles(this::importLegacyRewards, this::saveMigratedRewards);
 		Bukkit.getPluginManager().registerEvents(new CoreRewardListeners(plugin), plugin);
 	}
 
@@ -136,6 +137,49 @@ public class RewardBlockManager {
 		changeVersion++;
 	}
 
+	private boolean saveMigratedRewards() {
+		saveData();
+		synchronized (rewardBlocksLock) {
+			return !dataChanged;
+		}
+	}
+
+	private int importLegacyRewards(YamlConfiguration legacyRewards) throws InvalidConfigurationException {
+		int imported = 0;
+		for (String key : legacyRewards.getKeys(false)) {
+			ConfigurationSection section = legacyRewards.getConfigurationSection(key);
+			if (section == null)
+				continue;
+
+			Reward reward = new Reward();
+			reward.read(section);
+			Location location = (Location) section.get("location");
+			if (location == null || location.getWorld() == null || !Materials.isSkull(location.getBlock().getType()))
+				continue;
+
+			synchronized (rewardBlocksLock) {
+				boolean duplicate = false;
+				for (RewardBlock existing : rewardBlocks.values()) {
+					if (existing.getLocation().equals(location) && existing.getReward().equals(reward)) {
+						duplicate = true;
+						break;
+					}
+				}
+				if (duplicate)
+					continue;
+
+				int id = getNextID();
+				reward.setUniqueID(id);
+				location.getBlock().setMetadata(Reward.MH_REWARD_DATA_NEW,
+						new FixedMetadataValue(plugin, new Reward(reward)));
+				rewardBlocks.put(id, new RewardBlock(location, reward));
+				markDataChanged();
+				imported++;
+			}
+		}
+		return imported;
+	}
+
 	public void load() {
 		int n = 0;
 		int deleted = 0;
@@ -196,105 +240,6 @@ public class RewardBlockManager {
 
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-
-		// Import files from MobHunting to CustomItemsLib/rewards.yml
-		File file2 = new File(plugin.getDataFolder().getParent(), "MobHunting/rewards.yml");
-		if (file2.exists()) {
-			Core.getMessages().debug("Loading rewards from MobHunting first time.");
-			migrateRewardsFromMobHunting(file2);
-		}
-		
-		// Import files from BagOfGold to CustomItemsLib/rewards.yml
-		File file3 = new File(plugin.getDataFolder().getParent(), "BagOfGold/rewards.yml");
-		if (file3.exists()) {
-			Core.getMessages().debug("Loading rewards from BagOfGold first time.");
-			migrateRewardsFromBagOfGold(file3);
-		}
-	}
-
-	private void migrateRewardsFromMobHunting(File file) {
-		if (!file.exists())
-			return;
-
-		YamlConfiguration mobhunting_rewards = new YamlConfiguration();
-		int n = 0;
-
-		try {
-			mobhunting_rewards.load(file);
-		} catch (IOException | InvalidConfigurationException e1) {
-			e1.printStackTrace();
-		}
-
-		try {
-			for (String key : mobhunting_rewards.getKeys(false)) {
-				ConfigurationSection section = mobhunting_rewards.getConfigurationSection(key);
-				Reward reward = new Reward();
-				reward.read(section);
-				Location location = (Location) section.get("location");
-				for (RewardBlock rb : rewardBlocks.values()) {
-					if (rb.equals(new RewardBlock(location, reward)))
-						continue;
-				}
-				if (location != null && Materials.isSkull(location.getBlock().getType())) {
-					n++;
-					reward.setUniqueID(n);
-					location.getBlock().setMetadata(Reward.MH_REWARD_DATA_NEW,
-							new FixedMetadataValue(plugin, new Reward(reward)));
-					rewardBlocks.put(n, new RewardBlock(location, reward));
-				}
-			}
-		} catch (InvalidConfigurationException e) {
-			e.printStackTrace();
-		}
-		if (n > 0) {
-			Core.getMessages().debug("Loaded %s rewards from the CustomItemsLib/rewards.yml file." + ChatColor.RED
-					+ " Renaming MobHunting/rewards.yml to MobHunting/rewards.yml.old", n);
-			file.renameTo(new File(file.getPath() + ".old"));
-			dataChanged = true;
-		}
-
-	}
-	
-	private void migrateRewardsFromBagOfGold(File file) {
-		if (!file.exists())
-			return;
-
-		YamlConfiguration mobhunting_rewards = new YamlConfiguration();
-		int n = 0;
-
-		try {
-			mobhunting_rewards.load(file);
-		} catch (IOException | InvalidConfigurationException e1) {
-			e1.printStackTrace();
-		}
-
-		try {
-			for (String key : mobhunting_rewards.getKeys(false)) {
-				ConfigurationSection section = mobhunting_rewards.getConfigurationSection(key);
-				Reward reward = new Reward();
-				reward.read(section);
-				Location location = (Location) section.get("location");
-				for (RewardBlock rb : rewardBlocks.values()) {
-					if (rb.equals(new RewardBlock(location, reward)))
-						continue;
-				}
-				if (location != null && Materials.isSkull(location.getBlock().getType())) {
-					n++;
-					reward.setUniqueID(n);
-					location.getBlock().setMetadata(Reward.MH_REWARD_DATA_NEW,
-							new FixedMetadataValue(plugin, new Reward(reward)));
-					rewardBlocks.put(n, new RewardBlock(location, reward));
-				}
-			}
-		} catch (InvalidConfigurationException e) {
-			e.printStackTrace();
-		}
-		if (n > 0) {
-			Core.getMessages().debug("Loaded %s rewards from the CustomItemsLib/rewards.yml file." + ChatColor.RED
-					+ " Renaming BagOfGold/rewards.yml to BagOfGold/rewards.yml.old", n);
-			file.renameTo(new File(file.getPath() + ".old"));
-			dataChanged = true;
 		}
 
 	}

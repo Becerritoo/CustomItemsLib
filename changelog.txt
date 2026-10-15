@@ -6,6 +6,8 @@ V1.3.0 (development)
 * Own PlaceholderAPI message processing and updater runtime inside CustomItemsLib.
 * Read the shared player ID by column name so consumer statistics can be stored for new players.
 * Verify standalone, BagOfGold, MobHunting and combined startup on Paper 1.21.11.
+* Stop probing consumer plugins during the CustomItemsLib startup path.
+* Run historical consumer-file imports once and record their outcome without removing source files.
 
 V1.2.0 (2026-10-06)
 * Begin semantic versioning for the fork maintained by Becerritoo.

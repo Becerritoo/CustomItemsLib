@@ -47,12 +47,18 @@ Historical table names, metadata keys, signatures and serialized values remain
 unchanged during the 1.3.x transition. Schema ownership will be clarified before
 any migration is introduced.
 
+Imports from the former BagOfGold and MobHunting data folders are handled by a
+one-time legacy migrator. Its results are recorded in
+`legacy-migrations.yml`, and source files are retained so an import does not
+silently remove data owned by another plugin.
+
 ## Compatibility transition
 
 The 1.3.x line adds the new service contracts while retaining the public
 compatibility classes currently used by released versions of BagOfGold and
-MobHunting. Those classes may be marked deprecated after both consumers use the
-new contracts. Removing them requires a future major release.
+MobHunting. The library no longer registers its consumer probes during normal
+startup, but the classes remain deprecated and available to older binaries.
+Removing them requires a future major release.
 
 Development and validation proceed in this order:
 
