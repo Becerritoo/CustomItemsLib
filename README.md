@@ -8,11 +8,11 @@ This fork is maintained by [Becerritoo](https://github.com/Becerritoo) and conti
 work originally created by Rocologo. It provides the shared item, reward, storage and
 compatibility layer used by MobHunting and BagOfGold on current Paper releases.
 
-The current release is `1.2.0`, validated on Paper 1.21.11. Releases follow
+The current release is `1.3.0`, validated on Paper 1.21.11. Releases follow
 [Semantic Versioning](https://semver.org/); the library version is independent from the
 Minecraft or Paper version.
 
-Version `1.3.0` is under development on `release/1.3.0`. It introduces optional
+Version `1.3.0` introduces optional
 Bukkit service contracts for consumer plugins and removes the build dependency
 from CustomItemsLib back to BagOfGold and MobHunting.
 
@@ -28,7 +28,7 @@ plugins:
 ```
 
 See [changelog.txt](changelog.txt) for the complete history and
-[the 1.2.0 release notes](releases/v1.2.0.md) for compatibility and validation details.
+[the 1.3.0 release notes](releases/v1.3.0.md) for compatibility and validation details.
 The maintained responsibility boundaries and compatibility transition are described
-in [ARCHITECTURE.md](ARCHITECTURE.md). The current development test scope is recorded
+in [ARCHITECTURE.md](ARCHITECTURE.md). The release test scope is recorded
 in [COMPATIBILITY.md](COMPATIBILITY.md).

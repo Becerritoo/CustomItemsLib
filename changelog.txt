@@ -1,4 +1,4 @@
-V1.3.0 (development)
+V1.3.0 (2026-10-15)
 * Add an optional PhysicalCurrencyService contract through Bukkit's ServicesManager.
 * Delegate consumer-specific balance accounting and Shopkeepers slot policy to the active currency plugin.
 * Remove CustomItemsLib build dependencies and class references to BagOfGold and MobHunting.

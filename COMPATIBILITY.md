@@ -1,7 +1,7 @@
 # Compatibility status
 
-CustomItemsLib 1.3.0 is developed for Paper 1.21.11 and Java 21. This file
-records development validation and does not describe a released build.
+CustomItemsLib 1.3.0 is released for Paper 1.21.11 and Java 21. This file
+records the validation completed for the release.
 
 ## Plugin combinations
 
@@ -10,10 +10,10 @@ without CustomItemsLib, BagOfGold or MobHunting linkage errors:
 
 | Combination | Versions | Status |
 | --- | --- | --- |
-| CustomItemsLib only | 1.3.0-SNAPSHOT | Startup and shutdown verified |
-| CustomItemsLib and BagOfGold | 1.3.0-SNAPSHOT / 4.7.0-SNAPSHOT | Startup and shutdown verified |
-| CustomItemsLib and MobHunting | 1.3.0-SNAPSHOT / 8.7.0-SNAPSHOT | Startup and shutdown verified |
-| All three plugins | 1.3.0-SNAPSHOT / 4.7.0-SNAPSHOT / 8.7.0-SNAPSHOT | Startup and shutdown verified |
+| CustomItemsLib only | 1.3.0 | Startup and shutdown verified |
+| CustomItemsLib and BagOfGold | 1.3.0 / 4.7.0 | Startup and shutdown verified |
+| CustomItemsLib and MobHunting | 1.3.0 / 8.7.0 | Startup and shutdown verified |
+| All three plugins | 1.3.0 / 4.7.0 / 8.7.0 | Startup and shutdown verified |
 
 The build was also checked to contain no class references to the BagOfGold or
 MobHunting implementation packages. BagOfGold and MobHunting consume the
