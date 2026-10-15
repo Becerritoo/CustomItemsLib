@@ -9,6 +9,7 @@ V1.3.0 (development)
 * Stop probing consumer plugins during the CustomItemsLib startup path.
 * Run historical consumer-file imports once and record their outcome without removing source files.
 * Finish startup without Vault, Reserve or a physical-currency consumer and keep library commands available.
+* Retire legacy presentation adapters and keep CMILib as the maintained action-bar and boss-bar backend.
 
 V1.2.0 (2026-10-06)
 * Begin semantic versioning for the fork maintained by Becerritoo.

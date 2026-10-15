@@ -15,19 +15,12 @@ import one.lindegaard.CustomItemsLib.commands.ReloadCommand;
 import one.lindegaard.CustomItemsLib.commands.UpdateCommand;
 import one.lindegaard.CustomItemsLib.commands.VersionCommand;
 import one.lindegaard.CustomItemsLib.api.PhysicalCurrencyServices;
-import one.lindegaard.CustomItemsLib.compatibility.ActionAnnouncerCompat;
-import one.lindegaard.CustomItemsLib.compatibility.ActionBarAPICompat;
-import one.lindegaard.CustomItemsLib.compatibility.ActionbarCompat;
-import one.lindegaard.CustomItemsLib.compatibility.BarAPICompat;
-import one.lindegaard.CustomItemsLib.compatibility.BossBarAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.CMICompat;
 import one.lindegaard.CustomItemsLib.compatibility.CMILibCompat;
 import one.lindegaard.CustomItemsLib.compatibility.CompatPlugin;
 import one.lindegaard.CustomItemsLib.compatibility.CompatibilityManager;
 import one.lindegaard.CustomItemsLib.compatibility.PlaceholderAPICompat;
 import one.lindegaard.CustomItemsLib.compatibility.ProtocolLibCompat;
-import one.lindegaard.CustomItemsLib.compatibility.TitleAPICompat;
-import one.lindegaard.CustomItemsLib.compatibility.TitleManagerCompat;
 import one.lindegaard.CustomItemsLib.config.ConfigManager;
 import one.lindegaard.CustomItemsLib.messages.Messages;
 import one.lindegaard.CustomItemsLib.migration.LegacyDataMigrator;
@@ -157,13 +150,6 @@ public class Core extends JavaPlugin {
 		mCompatibilityManager.registerPlugin(ProtocolLibCompat.class, CompatPlugin.ProtocolLib);
 		mCompatibilityManager.registerPlugin(PlaceholderAPICompat.class, CompatPlugin.PlaceholderAPI);
 
-		mCompatibilityManager.registerPlugin(TitleManagerCompat.class, CompatPlugin.TitleManager);
-		mCompatibilityManager.registerPlugin(TitleAPICompat.class, CompatPlugin.TitleAPI);
-		mCompatibilityManager.registerPlugin(ActionAnnouncerCompat.class, CompatPlugin.ActionAnnouncer);
-		mCompatibilityManager.registerPlugin(ActionBarAPICompat.class, CompatPlugin.ActionBarApi);
-		mCompatibilityManager.registerPlugin(ActionbarCompat.class, CompatPlugin.Actionbar);
-		mCompatibilityManager.registerPlugin(BossBarAPICompat.class, CompatPlugin.BossBarApi);
-		mCompatibilityManager.registerPlugin(BarAPICompat.class, CompatPlugin.BarApi);
 		mCompatibilityManager.registerPlugin(CMICompat.class, CompatPlugin.CMI);
 		mCompatibilityManager.registerPlugin(CMILibCompat.class, CompatPlugin.CMILib);
 

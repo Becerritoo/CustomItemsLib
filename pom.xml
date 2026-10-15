@@ -271,44 +271,12 @@
 			<artifactId>bukkit</artifactId>
 			<version>${spigetupdate.version}</version>
 			<scope>compile</scope>
-		</dependency>
-
-		<!-- BossBarAPI -->
-		<dependency>
-			<groupId>org.inventivetalent</groupId>
-			<artifactId>bossbarapi</artifactId>
-			<version>${bossbarapi.version}</version>
-			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
-					<artifactId>metrics-lite</artifactId>
-					<groupId>org.mcstats.bukkit</groupId>
+					<groupId>org.bukkit</groupId>
+					<artifactId>bukkit</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-
-		<!-- BarAPI -->
-		<dependency>
-			<groupId>me.confuser</groupId>
-			<artifactId>BarAPI</artifactId>
-			<version>${barapi.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- TitleManager -->
-		<dependency>
-			<groupId>io.puharesource.mc.titlemanager</groupId>
-			<artifactId>TitleManager</artifactId>
-			<version>${titlemanager.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- TitleAPI, ActionBarAPI -->
-		<dependency>
-			<groupId>com.github.ConnorLinfoot</groupId>
-			<artifactId>TitleAPI</artifactId>
-			<version>${TitleAPI.version}</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<!-- CMI -->
@@ -325,21 +293,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- ActionBarAPI -->
-		<dependency>
-			<groupId>com.github.ConnorLinfoot</groupId>
-			<artifactId>ActionBarAPI</artifactId>
-			<version>${ActionBarAPI.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- ActionAnnouncer -->
-		<dependency>
-			<groupId>me.clip.actionannouncer</groupId>
-			<artifactId>ActionAnnouncer</artifactId>
-			<version>${ActionAnnouncer.version}</version>
-			<scope>provided</scope>
-		</dependency>
 		
 				<!-- Vault -->
 		<dependency>

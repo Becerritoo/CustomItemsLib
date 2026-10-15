@@ -5,7 +5,7 @@ description: Shared infrastructure for signed reward items and consumer plugins.
 dev-url: https://www.spigotmc.org/resources/customitemslib.nnnnn/
 authors: [Rocologo, Becerritoo]
 depend: []
-softdepend: [Reserve, Vault, PerWorldInventory, Citizens, Essentials, ProtocolLib, PlaceholderAPI, PacketListenerApi, ItemFrameShops, Multiverse-Core, TitleManager, CMI, CMILib, BossBarAPI, BarAPI, ActionBar, TitleAPI, TitleManager, ActionBarAPI, ActionAnnouncer]
+softdepend: [Reserve, Vault, PerWorldInventory, Citizens, Essentials, ProtocolLib, PlaceholderAPI, PacketListenerApi, ItemFrameShops, Multiverse-Core, CMI, CMILib]
 api-version: 1.21
 
 commands:
