@@ -2,7 +2,7 @@ name: CustomItemsLib
 main: one.lindegaard.CustomItemsLib.Core
 version: ${version}
 description: Shared infrastructure for signed reward items and consumer plugins.
-dev-url: https://www.spigotmc.org/resources/customitemslib.nnnnn/
+dev-url: https://github.com/Becerritoo/CustomItemsLib
 authors: [Rocologo, Becerritoo]
 depend: []
 softdepend: [Reserve, Vault, PerWorldInventory, Citizens, Essentials, ProtocolLib, PlaceholderAPI, PacketListenerApi, ItemFrameShops, Multiverse-Core, CMI, CMILib]
