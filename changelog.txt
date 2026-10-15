@@ -1,3 +1,11 @@
+V1.4.0 (2026-10-15)
+* Add a public API for signed, non-monetary item data used by consumer plugins.
+* Replace the abandoned Spiget updater with a shared Hangar release client.
+* Select only public, reviewed stable releases compatible with the exact Paper version.
+* Verify update downloads by filename, size and SHA-256 before staging them for restart.
+* Preserve the active plugin filename when placing updates in Bukkit's update directory.
+* Treat projects that have not yet been published on Hangar as having no available update.
+
 V1.3.0 (2026-10-15)
 * Add an optional PhysicalCurrencyService contract through Bukkit's ServicesManager.
 * Delegate consumer-specific balance accounting and Shopkeepers slot policy to the active currency plugin.
