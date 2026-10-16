@@ -1,5 +1,6 @@
 V1.4.0 (2026-10-15)
 * Add a public API for signed, non-monetary item data used by consumer plugins.
+* Expose textured player heads without attaching reward metadata for signed consumer templates.
 * Replace the abandoned Spiget updater with a shared Hangar release client.
 * Select only public, reviewed stable releases compatible with the exact Paper version.
 * Verify update downloads by filename, size and SHA-256 before staging them for restart.
