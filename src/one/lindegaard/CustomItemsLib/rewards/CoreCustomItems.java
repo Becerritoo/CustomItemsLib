@@ -159,18 +159,33 @@ public class CoreCustomItems {
 	 * @return ItemStack with custom texture.
 	 */
 	public static ItemStack getCustomtexture(Reward reward, String mTextureValue, String mTextureSignature) {
-		ItemStack skull = CoreCustomItems.getDefaultPlayerHead(1);
 		if (mTextureValue.isEmpty())
+			return CoreCustomItems.getDefaultPlayerHead(1);
+		ItemStack skull = getCustomTextureItem(reward.getSkinUUID(), reward.getDisplayName(), mTextureValue,
+				mTextureSignature);
+
+		// add displayname and lores to skull
+		return Reward.setDisplayNameAndHiddenLores(skull, reward);
+	}
+
+	/**
+	 * Creates a textured player head without attaching reward or currency data.
+	 */
+	public static ItemStack getCustomTextureItem(UUID profileUuid, String profileName, String textureValue,
+			String textureSignature) {
+		ItemStack skull = CoreCustomItems.getDefaultPlayerHead(1);
+		if (textureValue == null || textureValue.isEmpty())
 			return skull;
+		UUID safeProfileUuid = profileUuid == null ? UUID.randomUUID() : profileUuid;
+		String safeProfileName = profileName == null ? "" : profileName;
 
 		// add custom texture to skull
 		SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
 		try {
 			// Modern API path (Paper/Spigot 1.20+): build a PlayerProfile from the encoded texture value.
-			URL skinUrl = getSkinUrlFromTextureValue(mTextureValue);
+			URL skinUrl = getSkinUrlFromTextureValue(textureValue);
 			if (skinUrl != null) {
-				UUID profileUuid = reward.getSkinUUID() != null ? reward.getSkinUUID() : UUID.randomUUID();
-				PlayerProfile ownerProfile = Bukkit.createPlayerProfile(profileUuid);
+				PlayerProfile ownerProfile = Bukkit.createPlayerProfile(safeProfileUuid);
 				PlayerTextures textures = ownerProfile.getTextures();
 				textures.setSkin(skinUrl);
 				ownerProfile.setTextures(textures);
@@ -180,11 +195,11 @@ public class CoreCustomItems {
 			}
 		} catch (Throwable modernApiFailure) {
 			// Legacy fallback for old servers relying on direct GameProfile field injection.
-			GameProfile profile = new GameProfile(reward.getSkinUUID(), reward.getDisplayName());
-			if (mTextureSignature.isEmpty())
-				profile.getProperties().put("textures", new Property("textures", mTextureValue));
+			GameProfile profile = new GameProfile(safeProfileUuid, safeProfileName);
+			if (textureSignature == null || textureSignature.isEmpty())
+				profile.getProperties().put("textures", new Property("textures", textureValue));
 			else
-				profile.getProperties().put("textures", new Property("textures", mTextureValue, mTextureSignature));
+				profile.getProperties().put("textures", new Property("textures", textureValue, textureSignature));
 			Field profileField = null;
 
 			try {
@@ -201,9 +216,6 @@ public class CoreCustomItems {
 			}
 		}
 		skull.setItemMeta(skullMeta);
-
-		// add displayname and lores to skull
-		skull = Reward.setDisplayNameAndHiddenLores(skull, reward);
 		return skull;
 	}
 
