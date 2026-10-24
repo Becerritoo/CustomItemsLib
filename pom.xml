@@ -5,7 +5,7 @@
 	<artifactId>CustomItemsLib</artifactId>
 	<packaging>jar</packaging>
 	<!-- <version>1.0.9</version> -->
-	<version>1.4.0</version>
+	<version>1.4.1-SNAPSHOT</version>
 	<name>CustomItemsLib</name>
 	<url>https://github.com/Becerritoo/CustomItemsLib</url>
 	<description>Shared infrastructure for signed reward items and consumer plugins.</description>
