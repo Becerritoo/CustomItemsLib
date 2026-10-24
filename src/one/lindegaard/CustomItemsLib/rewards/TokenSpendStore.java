@@ -6,6 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
@@ -13,6 +16,36 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import one.lindegaard.CustomItemsLib.Core;
 
 public class TokenSpendStore {
+
+	public static final class TokenSpend {
+		private final String tokenUuid;
+		private final UUID playerUuid;
+		private final String source;
+		private final double amount;
+
+		public TokenSpend(String tokenUuid, UUID playerUuid, String source, double amount) {
+			this.tokenUuid = tokenUuid;
+			this.playerUuid = playerUuid;
+			this.source = source;
+			this.amount = amount;
+		}
+
+		public String getTokenUuid() {
+			return tokenUuid;
+		}
+
+		public UUID getPlayerUuid() {
+			return playerUuid;
+		}
+
+		public String getSource() {
+			return source;
+		}
+
+		public double getAmount() {
+			return amount;
+		}
+	}
 
 	public enum MarkResult {
 		MARKED,
@@ -39,9 +72,22 @@ public class TokenSpendStore {
 	}
 
 	public MarkResult markTokenSpent(String tokenUuid, UUID playerUuid, String source, double amount) {
-		if (tokenUuid == null || tokenUuid.isEmpty()) {
+		return markTokensSpent(java.util.Collections.singletonList(
+				new TokenSpend(tokenUuid, playerUuid, source, amount)));
+	}
+
+	/**
+	 * Atomically claims every token in a physical-currency transaction. Either all
+	 * token UUIDs are recorded, or none of them are. The method deliberately uses
+	 * one connection and one transaction so a purchase never partially consumes a
+	 * set of bags and does not open a database connection per bag.
+	 */
+	public MarkResult markTokensSpent(Collection<TokenSpend> tokenSpends) {
+		if (tokenSpends == null || tokenSpends.isEmpty() || hasInvalidTokenIds(tokenSpends)) {
 			return MarkResult.ERROR;
 		}
+		if (hasDuplicateTokenIds(tokenSpends))
+			return MarkResult.DUPLICATE;
 
 		String sql;
 		boolean mysql = isMySQL();
@@ -51,24 +97,65 @@ public class TokenSpendStore {
 			sql = "INSERT OR IGNORE INTO mh_spent_tokens(token_uuid, player_uuid, source, amount, spent_at) VALUES(?,?,?,?,?)";
 		}
 
-		try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setString(1, tokenUuid);
-			statement.setString(2, playerUuid == null ? null : playerUuid.toString());
-			statement.setString(3, source == null ? "unknown" : source);
-			statement.setDouble(4, amount);
-			statement.setLong(5, System.currentTimeMillis());
-
-			int updated = statement.executeUpdate();
-			return updated > 0 ? MarkResult.MARKED : MarkResult.DUPLICATE;
+		try (Connection connection = openConnection()) {
+			boolean previousAutoCommit = connection.getAutoCommit();
+			connection.setAutoCommit(false);
+			try (PreparedStatement statement = connection.prepareStatement(sql)) {
+				long spentAt = System.currentTimeMillis();
+				for (TokenSpend tokenSpend : tokenSpends) {
+					statement.setString(1, tokenSpend.getTokenUuid());
+					statement.setString(2, tokenSpend.getPlayerUuid() == null ? null
+							: tokenSpend.getPlayerUuid().toString());
+					statement.setString(3, tokenSpend.getSource() == null ? "unknown" : tokenSpend.getSource());
+					statement.setDouble(4, tokenSpend.getAmount());
+					statement.setLong(5, spentAt);
+					if (statement.executeUpdate() != 1) {
+						connection.rollback();
+						connection.setAutoCommit(previousAutoCommit);
+						return MarkResult.DUPLICATE;
+					}
+				}
+				connection.commit();
+				connection.setAutoCommit(previousAutoCommit);
+				return MarkResult.MARKED;
+			} catch (Exception ex) {
+				connection.rollback();
+				throw ex;
+			}
 		} catch (SQLException ex) {
 			if (mysql && isDuplicateKey(ex)) {
 				return MarkResult.DUPLICATE;
 			}
-			Core.getMessages().debug("TokenSpendStore markTokenSpent failed for %s: %s", tokenUuid, ex.getMessage());
+			logFailure(tokenSpends, ex);
 			return MarkResult.ERROR;
 		} catch (Exception ex) {
-			Core.getMessages().debug("TokenSpendStore markTokenSpent failed for %s: %s", tokenUuid, ex.getMessage());
+			logFailure(tokenSpends, ex);
 			return MarkResult.ERROR;
+		}
+	}
+
+	static boolean hasInvalidTokenIds(Collection<TokenSpend> tokenSpends) {
+		for (TokenSpend tokenSpend : tokenSpends) {
+			if (tokenSpend == null || tokenSpend.getTokenUuid() == null || tokenSpend.getTokenUuid().isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static boolean hasDuplicateTokenIds(Collection<TokenSpend> tokenSpends) {
+		Set<String> tokenIds = new HashSet<String>();
+		for (TokenSpend tokenSpend : tokenSpends) {
+			if (!tokenIds.add(tokenSpend.getTokenUuid()))
+				return true;
+		}
+		return false;
+	}
+
+	private void logFailure(Collection<TokenSpend> tokenSpends, Exception ex) {
+		if (Core.getMessages() != null) {
+			Core.getMessages().debug("TokenSpendStore could not atomically mark %s token(s): %s", tokenSpends.size(),
+					ex.getMessage());
 		}
 	}
 
@@ -108,7 +195,7 @@ public class TokenSpendStore {
 		}
 	}
 
-	private boolean isMySQL() {
+	protected boolean isMySQL() {
 		return Core.getConfigManager().databaseType != null
 				&& Core.getConfigManager().databaseType.equalsIgnoreCase("mysql");
 	}
@@ -117,7 +204,7 @@ public class TokenSpendStore {
 		return ex.getErrorCode() == 1062 || (ex.getSQLState() != null && ex.getSQLState().startsWith("23"));
 	}
 
-	private Connection openConnection() throws Exception {
+	protected Connection openConnection() throws Exception {
 		if (isMySQL()) {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			MysqlDataSource dataSource = new MysqlDataSource();
