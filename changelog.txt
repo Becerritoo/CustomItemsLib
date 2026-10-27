@@ -1,3 +1,9 @@
+V1.4.1 (2026-10-27)
+* Claim every reward token used by one physical-currency transaction atomically.
+* Roll back the complete token batch when any token is duplicated or cannot be recorded.
+* Reject missing or repeated token identifiers before opening a database transaction.
+* Reuse one database connection for the complete batch instead of one connection per item.
+
 V1.4.0 (2026-10-15)
 * Add a public API for signed, non-monetary item data used by consumer plugins.
 * Expose textured player heads without attaching reward metadata for signed consumer templates.
