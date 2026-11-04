@@ -1,3 +1,7 @@
+V2.0.0 (development)
+* Remove the archived Reserve economy backend and its build dependency.
+* Use only Vault-compatible economy providers while retaining library-only startup without an economy.
+
 V1.4.1 (2026-10-27)
 * Claim every reward token used by one physical-currency transaction atomically.
 * Roll back the complete token batch when any token is duplicated or cannot be recorded.
