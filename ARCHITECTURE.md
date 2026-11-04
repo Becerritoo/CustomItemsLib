@@ -28,7 +28,7 @@ operation so consumers can be enabled after CustomItemsLib.
 ## Consumer responsibilities
 
 BagOfGold owns physical-currency policy and accounting, including player
-balances, debt, banks, Vault and Reserve providers, Shopkeepers behavior,
+balances, debt, banks, Vault-compatible providers, Shopkeepers behavior,
 Citizens banker traits and BagOfGold placeholders.
 
 MobHunting owns kill detection, rewards and penalties, achievements, bounties,

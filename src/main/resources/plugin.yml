@@ -5,7 +5,7 @@ description: Shared infrastructure for signed reward items and consumer plugins.
 dev-url: https://github.com/Becerritoo/CustomItemsLib
 authors: [Rocologo, Becerritoo]
 depend: []
-softdepend: [Reserve, Vault, PerWorldInventory, Citizens, Essentials, ProtocolLib, PlaceholderAPI, PacketListenerApi, ItemFrameShops, Multiverse-Core, CMI, CMILib]
+softdepend: [Vault, PerWorldInventory, Citizens, Essentials, ProtocolLib, PlaceholderAPI, PacketListenerApi, ItemFrameShops, Multiverse-Core, CMI, CMILib]
 api-version: 1.21
 
 commands:

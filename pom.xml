@@ -290,14 +290,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- Reserve -->
-		<dependency>
-			<groupId>net.tnemc</groupId>
-			<artifactId>Reserve</artifactId>
-			<version>${reserve.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
 		<!-- Citizens -->
 		<dependency>
 			<groupId>net.citizensnpcs</groupId>

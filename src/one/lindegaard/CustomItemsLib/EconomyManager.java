@@ -1,34 +1,28 @@
 package one.lindegaard.CustomItemsLib;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import net.milkbowl.vault.economy.Economy;
-import net.tnemc.core.Reserve;
-import net.tnemc.core.economy.EconomyAPI;
 
 /**
- * Economy handler to interface with Vault or Reserve directly.
- * 
+ * Economy handler for Vault-compatible providers.
+ *
  * @author Rocologo
- * 
  */
 public class EconomyManager {
 
-	private Core plugin = null;
-	private Economy vaultEconomy = null;
-	private EconomyAPI reserveEconomy = null;
-	private EcoType Type = EcoType.NONE;
+	private final Core plugin;
+	private Economy vaultEconomy;
+	private EcoType type = EcoType.NONE;
 	private String version = "";
 
 	public enum EcoType {
-		NONE, VAULT, RESERVE
+		NONE, VAULT
 	}
 
 	public EconomyManager(Core plugin) {
@@ -36,37 +30,16 @@ public class EconomyManager {
 		setupEconomy();
 	}
 
-	/**
-	 * @return the economy type we have detected.
-	 */
 	public EcoType getType() {
-
-		return Type;
+		return type;
 	}
 
-	/**
-	 * Are we using any economy system?
-	 * 
-	 * @return true if we found one.
-	 */
 	public boolean isActive() {
-		return (Type != EcoType.NONE);
+		return type == EcoType.VAULT && vaultEconomy != null;
 	}
 
-	/**
-	 * @return The current economy providers version string
-	 */
 	public String getVersion() {
 		return version;
-	}
-
-	/**
-	 * Internal function to set the version string.
-	 * 
-	 * @param version
-	 */
-	private void setVersion(String version) {
-		this.version = version;
 	}
 
 	private RegisteredServiceProvider<Economy> getPreferredVaultProvider() {
@@ -84,345 +57,130 @@ public class EconomyManager {
 			}
 		}
 
-		if (bagOfGoldProvider != null)
-			return bagOfGoldProvider;
-
-		return plugin.getServer().getServicesManager().getRegistration(Economy.class);
+		return bagOfGoldProvider != null ? bagOfGoldProvider
+				: plugin.getServer().getServicesManager().getRegistration(Economy.class);
 	}
 
 	/**
-	 * Find and configure a suitable economy provider
-	 * 
-	 * @return true if successful.
+	 * Finds the preferred Vault-compatible economy provider.
+	 *
+	 * @return true when an economy provider is available
 	 */
 	public Boolean setupEconomy() {
-		Plugin economyProvider = null;
-		EcoType previousType = Type;
-		String previousVersion = getVersion();
+		EcoType previousType = type;
+		String previousVersion = version;
 
-		/*
-		 * Attempt to find Vault for Economy handling
-		 */
 		try {
-			RegisteredServiceProvider<Economy> vaultEcoProvider = getPreferredVaultProvider();
-			if (vaultEcoProvider != null) {
-				/*
-				 * Flag as using Vault hooks
-				 */
-				vaultEconomy = vaultEcoProvider.getProvider();
-				reserveEconomy = null;
-				setVersion(String.format("%s %s", vaultEcoProvider.getProvider().getName(), "via Vault"));
-				Type = EcoType.VAULT;
-				if (previousType != Type || !previousVersion.equals(getVersion()))
-					Bukkit.getConsoleSender()
-							.sendMessage(Core.PREFIX + "CustomItemsLib is using " + getVersion() + " as Economy Provider");
+			RegisteredServiceProvider<Economy> provider = getPreferredVaultProvider();
+			if (provider != null && provider.getProvider() != null) {
+				vaultEconomy = provider.getProvider();
+				version = String.format("%s via Vault", vaultEconomy.getName());
+				type = EcoType.VAULT;
+				if (previousType != type || !previousVersion.equals(version))
+					Bukkit.getConsoleSender().sendMessage(
+							Core.PREFIX + "CustomItemsLib is using " + version + " as Economy Provider");
 				return true;
 			}
-		} catch (NoClassDefFoundError ex) {
+		} catch (NoClassDefFoundError ignored) {
+			// Vault is an optional dependency.
 		}
 
-		/*
-		 * Attempt to find Reserve for Economy handling
-		 */
-		economyProvider = plugin.getServer().getPluginManager().getPlugin("Reserve");
-		if (economyProvider != null && ((Reserve) economyProvider).economyProvided()) {
-			/*
-			 * Flat as using Reserve Hooks.
-			 */
-			reserveEconomy = ((Reserve) economyProvider).economy();
-			vaultEconomy = null;
-			setVersion(String.format("%s %s", reserveEconomy.name(), "via Reserve"));
-			Type = EcoType.RESERVE;
-			if (previousType != Type || !previousVersion.equals(getVersion()))
-				Bukkit.getConsoleSender()
-						.sendMessage(Core.PREFIX + "CustomItemsLib is using " + getVersion() + " as Economy Provider");
-			return true;
-		}
 		vaultEconomy = null;
-		reserveEconomy = null;
-		setVersion("");
-		Type = EcoType.NONE;
+		version = "";
+		type = EcoType.NONE;
 		return false;
 	}
 
-	/**
-	 * Get the name of the economy plugin
-	 * 
-	 * @return name
-	 */
 	public String getName() {
-		switch (Type) {
-		case RESERVE:
-			return reserveEconomy.name();
-		case VAULT:
-			return vaultEconomy.getName();
-		default:
-			return "Vault or Reserve was not found";
-		}
+		return isActive() ? vaultEconomy.getName() : "Vault was not found";
 	}
 
 	public String format(Double amount) {
-		switch (Type) {
-		case RESERVE:
-			return reserveEconomy.format(new BigDecimal(amount));
-		case VAULT:
-			return vaultEconomy.format(amount);
-		default:
-			return "Vault or Reserve was not found";
-		}
+		return isActive() ? vaultEconomy.format(amount) : "Vault was not found";
 	}
 
-	/**
-	 * Check if account exists
-	 * 
-	 * @param offlinePlayer
-	 * @return
-	 */
 	public boolean hasEconomyAccount(OfflinePlayer offlinePlayer) {
-		switch (Type) {
-		case RESERVE:
-			return reserveEconomy.hasAccount(offlinePlayer.getUniqueId());
-		case VAULT:
-			return vaultEconomy.hasAccount(offlinePlayer);
-		default:
-			break;
-		}
-		return false;
+		return isActive() && vaultEconomy.hasAccount(offlinePlayer);
 	}
 
 	/**
-	 * Attempt to delete the economy account.
+	 * Attempts to zero the account because Vault has no account deletion method.
 	 */
 	public void removeAccount(OfflinePlayer offlinePlayer) {
+		if (!isActive())
+			return;
 		try {
-			switch (Type) {
-			case RESERVE:
-				reserveEconomy.deleteAccount(offlinePlayer.getUniqueId());
-				break;
-			case VAULT: // Attempt to zero the account as Vault provides no delete method.
-				if (!vaultEconomy.hasAccount(offlinePlayer))
-					vaultEconomy.createPlayerAccount(offlinePlayer);
-				vaultEconomy.withdrawPlayer(offlinePlayer, (vaultEconomy.getBalance(offlinePlayer)));
-				return;
-			default:
-				break;
-			}
-		} catch (NoClassDefFoundError e) {
+			if (!vaultEconomy.hasAccount(offlinePlayer))
+				vaultEconomy.createPlayerAccount(offlinePlayer);
+			vaultEconomy.withdrawPlayer(offlinePlayer, vaultEconomy.getBalance(offlinePlayer));
+		} catch (NoClassDefFoundError ignored) {
+			// The optional Vault bridge was removed while the server was running.
 		}
-		return;
 	}
 
-	/**
-	 * Check if offlinePlayer has the amount of money on his account
-	 * 
-	 * @param offlinePlayer
-	 * @param amount
-	 * 
-	 * @return true if the player has enough money on his account
-	 */
 	public boolean hasMoney(OfflinePlayer offlinePlayer, double amount) {
-		switch (Type) {
-		case RESERVE:
-			return reserveEconomy.hasHoldings(offlinePlayer.getUniqueId(), new BigDecimal(amount));
-		case VAULT:
-			return vaultEconomy.has(offlinePlayer, amount);
-		default:
-			break;
-		}
-		return false;
+		return isActive() && vaultEconomy.has(offlinePlayer, amount);
 	}
 
-	/**
-	 * Returns the accounts current balance
-	 * 
-	 * @param offlinePlayer
-	 * @return double containing the total in the account
-	 */
 	public double getBalance(OfflinePlayer offlinePlayer) {
-		switch (Type) {
-		case RESERVE:
-			if (!reserveEconomy.hasAccount(offlinePlayer.getUniqueId()))
-				reserveEconomy.createAccount(offlinePlayer.getUniqueId());
-			return reserveEconomy.getHoldings(offlinePlayer.getUniqueId()).doubleValue();
-		case VAULT:
-			if (!vaultEconomy.hasAccount(offlinePlayer))
-				vaultEconomy.createPlayerAccount(offlinePlayer);
-			return vaultEconomy.getBalance(offlinePlayer);
-		default:
-			break;
-		}
-		return 0.0;
+		if (!isActive())
+			return 0.0;
+		ensureAccount(offlinePlayer);
+		return vaultEconomy.getBalance(offlinePlayer);
 	}
 
-	/**
-	 * Returns true if the account has enough money
-	 * 
-	 * @param offlinePlayer
-	 * @param amount
-	 * @return true if there is enough in the account
-	 */
 	public boolean hasEnough(OfflinePlayer offlinePlayer, Double amount) {
-		if (getBalance(offlinePlayer) >= amount)
-			return true;
-		return false;
+		return getBalance(offlinePlayer) >= amount;
 	}
 
-	/**
-	 * Attempts to remove an amount from an account
-	 * 
-	 * @param offlinePlayer
-	 * @param amount
-	 * @return true if successful
-	 */
 	public boolean withdrawPlayer(OfflinePlayer offlinePlayer, Double amount) {
-		switch (Type) {
-		case RESERVE:
-			if (!reserveEconomy.hasAccount(offlinePlayer.getUniqueId()))
-				reserveEconomy.createAccount(offlinePlayer.getUniqueId());
-			return reserveEconomy.removeHoldings(offlinePlayer.getUniqueId(), new BigDecimal(amount));
-		case VAULT:
-			if (!vaultEconomy.hasAccount(offlinePlayer))
-				vaultEconomy.createPlayerAccount(offlinePlayer);
-			return vaultEconomy.withdrawPlayer(offlinePlayer, amount).transactionSuccess();
-		default:
-			break;
-		}
-		return false;
+		if (!isActive())
+			return false;
+		ensureAccount(offlinePlayer);
+		return vaultEconomy.withdrawPlayer(offlinePlayer, amount).transactionSuccess();
 	}
 
-	/**
-	 * Add funds to an account.
-	 * 
-	 * @param offlinePlayer
-	 * @param amount
-	 * @param world
-	 * @return true if successful
-	 */
 	public boolean depositPlayer(OfflinePlayer offlinePlayer, Double amount) {
-		switch (Type) {
-		case RESERVE:
-			if (!reserveEconomy.hasAccount(offlinePlayer.getUniqueId()))
-				reserveEconomy.createAccount(offlinePlayer.getUniqueId());
-			return reserveEconomy.addHoldings(offlinePlayer.getUniqueId(), new BigDecimal(amount));
-		case VAULT:
-			if (!vaultEconomy.hasAccount(offlinePlayer))
-				vaultEconomy.createPlayerAccount(offlinePlayer);
-			return vaultEconomy.depositPlayer(offlinePlayer, amount).transactionSuccess();
-		default:
-			break;
-		}
-		return false;
+		if (!isActive())
+			return false;
+		ensureAccount(offlinePlayer);
+		return vaultEconomy.depositPlayer(offlinePlayer, amount).transactionSuccess();
 	}
 
-	/**
-	 * Set the OfflinePlayers balance on his account to amount
-	 * 
-	 * @param offlinePlayer
-	 * @param amount
-	 * @param world
-	 * 
-	 * @return true if the balance was set
-	 */
 	public boolean setBalance(OfflinePlayer offlinePlayer, Double amount, World world) {
-		switch (Type) {
-		case RESERVE:
-			if (!reserveEconomy.hasAccount(offlinePlayer.getUniqueId()))
-				reserveEconomy.createAccount(offlinePlayer.getUniqueId());
-			return reserveEconomy.setHoldings(offlinePlayer.getUniqueId(), new BigDecimal(amount), world.getName());
-		case VAULT:
-			if (!vaultEconomy.hasAccount(offlinePlayer))
-				vaultEconomy.createPlayerAccount(offlinePlayer);
-			return vaultEconomy.depositPlayer(offlinePlayer, (amount - vaultEconomy.getBalance(offlinePlayer)))
-					.transactionSuccess();
-		default:
-			break;
-		}
-		return false;
+		if (!isActive())
+			return false;
+		ensureAccount(offlinePlayer);
+		return vaultEconomy.depositPlayer(offlinePlayer, amount - vaultEconomy.getBalance(offlinePlayer))
+				.transactionSuccess();
 	}
 
-	/**
-	 * Format this balance according to the current economy systems settings.
-	 * 
-	 * @param balance
-	 * @return string containing the formatted balance
-	 */
 	public String getFormattedBalance(double balance) {
 		try {
-			switch (Type) {
-			case RESERVE:
-				return reserveEconomy.format(new BigDecimal(balance));
-			case VAULT:
+			if (isActive())
 				return vaultEconomy.format(balance);
-			default:
-				break;
-			}
-		} catch (Exception InvalidAPIFunction) {
+		} catch (Exception ignored) {
 		}
 		return String.format("%.2f", balance);
 	}
 
-	/**
-	 * Get the maximum amount of money the player can carry in his inventory
-	 * 
-	 * @param offlinePlayer
-	 * @return
-	 */
 	public double getSpaceForMoney(OfflinePlayer offlinePlayer) {
-		switch (Type) {
-		case RESERVE:
-			if (!reserveEconomy.hasAccount(offlinePlayer.getUniqueId()))
-				reserveEconomy.createAccount(offlinePlayer.getUniqueId());
-			return reserveEconomy.getHoldings(offlinePlayer.getUniqueId()).doubleValue();
-		case VAULT:
-			if (!vaultEconomy.hasAccount(offlinePlayer))
-				vaultEconomy.createPlayerAccount(offlinePlayer);
-			return vaultEconomy.getBalance(offlinePlayer);
-		default:
-			break;
-		}
-		return 0;
+		return getBalance(offlinePlayer);
 	}
 
-	/**
-	 * Check if the if the accounts owner is offlineplayer
-	 * 
-	 * @param account
-	 * @param offlinePlayer
-	 * 
-	 * @return true if the accounts owner is the offlineplayer
-	 */
 	public boolean isBankOwner(String account, OfflinePlayer offlinePlayer) {
-		switch (Type) {
-		case RESERVE:
-			return reserveEconomy.isAccessor(account, offlinePlayer.getUniqueId());
-		case VAULT:
-			return vaultEconomy.isBankOwner(account, offlinePlayer).transactionSuccess();
-		default:
-			break;
-		}
-		return false;
+		return isActive() && vaultEconomy.isBankOwner(account, offlinePlayer).transactionSuccess();
 	}
 
-	/**
-	 * Get Bank Balance for OfflinePlayer
-	 * 
-	 * @param offlinePlayer
-	 * @return
-	 */
 	public double getBankBalance(OfflinePlayer offlinePlayer) {
-		switch (Type) {
-		case RESERVE:
-			if (!reserveEconomy.hasAccount(offlinePlayer.getUniqueId()))
-				reserveEconomy.createAccount(offlinePlayer.getUniqueId());
-			return reserveEconomy.getHoldings(offlinePlayer.getUniqueId()).doubleValue();
-		case VAULT:
-			if (!vaultEconomy.hasAccount(offlinePlayer))
-				vaultEconomy.createPlayerAccount(offlinePlayer);
-			return vaultEconomy.bankBalance(offlinePlayer.getUniqueId().toString()).balance;
-		default:
-			break;
-		}
-		return 0.0;
+		if (!isActive())
+			return 0.0;
+		ensureAccount(offlinePlayer);
+		return vaultEconomy.bankBalance(offlinePlayer.getUniqueId().toString()).balance;
 	}
 
+	private void ensureAccount(OfflinePlayer offlinePlayer) {
+		if (!vaultEconomy.hasAccount(offlinePlayer))
+			vaultEconomy.createPlayerAccount(offlinePlayer);
+	}
 }

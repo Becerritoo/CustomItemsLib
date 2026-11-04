@@ -153,7 +153,7 @@ public class Core extends JavaPlugin {
 		mCompatibilityManager.registerPlugin(CMICompat.class, CompatPlugin.CMI);
 		mCompatibilityManager.registerPlugin(CMILibCompat.class, CompatPlugin.CMILib);
 
-		// Hook into Vault or Reserve
+		// Hook into a Vault-compatible economy provider.
 		mEconomyManager = new EconomyManager(this);
 		Bukkit.getPluginManager().registerEvents(new EconomyProviderListener(), this);
 		
