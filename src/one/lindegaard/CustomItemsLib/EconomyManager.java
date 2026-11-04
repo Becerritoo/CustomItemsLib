@@ -151,8 +151,12 @@ public class EconomyManager {
 		if (!isActive())
 			return false;
 		ensureAccount(offlinePlayer);
-		return vaultEconomy.depositPlayer(offlinePlayer, amount - vaultEconomy.getBalance(offlinePlayer))
-				.transactionSuccess();
+		double difference = amount - vaultEconomy.getBalance(offlinePlayer);
+		if (difference > 0)
+			return vaultEconomy.depositPlayer(offlinePlayer, difference).transactionSuccess();
+		if (difference < 0)
+			return vaultEconomy.withdrawPlayer(offlinePlayer, -difference).transactionSuccess();
+		return true;
 	}
 
 	public String getFormattedBalance(double balance) {
